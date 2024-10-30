@@ -79,8 +79,7 @@ const imageResize = async (request: any) => {
 
             try {
                 const image = await Jimp.read(fileBuffer);
-                
-                // Check the format of the image
+
                 console.log("Image loaded successfully", image);
 
                 const largeBuffer = await image.clone().getBufferAsync(Jimp.MIME_JPEG);

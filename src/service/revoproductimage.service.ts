@@ -10,10 +10,7 @@ export module revoimageservice {
             data.productid = request.params.productid
             let dataresult = await axios.post(REVO_PRODUCT_IMAGE_API, data);
             console.log(dataresult, 'dataresult');
-            // reply.send(dataresult.data.product);
             return dataresult.data.product;
-            // reply.send("test");
-            // console.log(dataresult);
         } catch (error) {
             console.log(error.message);
             reply.send(error.message);
