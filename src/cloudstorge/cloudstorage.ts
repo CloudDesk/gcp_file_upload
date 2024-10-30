@@ -61,7 +61,7 @@ export async function uploadPDFtwo(filename: string, file: any) {
 export async function uploadFile(
   filename: string,
   file: any,
-  size: 'large' | 'medium' | 'small',
+  size: "large" | "medium" | "small",
   productId?: number,
   organisation?: string
 ): Promise<{
@@ -76,8 +76,10 @@ export async function uploadFile(
       const bucket = storage.bucket(bucketName);
 
       // Build the folder path based on productId and size
-      const folderPath = productId ? `${productId}/${size}/${filename}` : `${size}/${filename}`;
-      console.log(folderPath, 'folderPath');
+      const folderPath = productId
+        ? `${productId}/${size}/${filename}`
+        : `${size}/${filename}`;
+      console.log(folderPath, "folderPath");
       const blob = bucket.file(folderPath);
 
       const fileExtension = filename.split(".").pop()?.toLowerCase();
@@ -127,9 +129,11 @@ export async function uploadFile(
   });
 }
 
-
-
-export async function uploadFileToGcp(filename: string,file: any,organisation?: string): Promise<{
+export async function uploadFileToGcp(
+  filename: string,
+  file: any,
+  organisation?: string
+): Promise<{
   success: boolean;
   message: string;
   filename?: string;
@@ -166,7 +170,7 @@ export async function uploadFileToGcp(filename: string,file: any,organisation?: 
       const blobStream = blob.createWriteStream({
         resumable: false,
         gzip: true,
-        metadata: {contentType: contentType},
+        metadata: { contentType: contentType },
       });
       blobStream.on("error", (error) => {
         console.error("Upload error:", error);
@@ -207,8 +211,8 @@ export async function uploadFileToGcp(filename: string,file: any,organisation?: 
 export async function getBucketFiles(
   bucketName: string,
   options?: {
-    prefix?: string; 
-    maxResults?: number; 
+    prefix?: string;
+    maxResults?: number;
     pageToken?: string;
   }
 ): Promise<{
@@ -250,7 +254,7 @@ export async function getBucketFiles(
     // Format file metadata
     const formattedFiles = await Promise.all(
       files.map(async (file) => {
-        const [metadata] : any = await file.getMetadata();
+        const [metadata]: any = await file.getMetadata();
 
         // Convert size to human-readable format
         const size = formatFileSize(parseInt(metadata.size));

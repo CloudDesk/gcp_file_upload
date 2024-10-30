@@ -11,16 +11,6 @@ export var docgenController;
             return error;
         }
     };
-    docgenController.insertfiles = async (req, reply) => {
-        try {
-            console.log("test");
-            let inserstpdf = await docgenService.insertfiles(req, reply);
-            return inserstpdf;
-        }
-        catch (error) {
-            return error;
-        }
-    };
     docgenController.insertfileupload = async (req, reply) => {
         try {
             console.log("test");

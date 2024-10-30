@@ -3,7 +3,7 @@ import path from "path";
 const storage = new Storage({
     keyFilename: "src/cloudstorge/docblitz-437213-d99f2718bd72.json",
 });
-const bucketName = "pdfgenfile";
+const bucketName = "revo_product_images";
 console.log(storage);
 export async function uploadPDF(filePath) {
     try {
@@ -53,12 +53,16 @@ export async function uploadPDFtwo(filename, file) {
         console.error("Error uploading file:", error);
     }
 }
-export async function uploadFile(filename, file, organisation) {
+export async function uploadFile(filename, file, size, productId, organisation) {
     return new Promise((resolve, reject) => {
         try {
             const bucket = storage.bucket(bucketName);
-            const blob = bucket.file(filename);
-            // Set appropriate content type based on file extension
+            // Build the folder path based on productId and size
+            const folderPath = productId
+                ? `${productId}/${size}/${filename}`
+                : `${size}/${filename}`;
+            console.log(folderPath, "folderPath");
+            const blob = bucket.file(folderPath);
             const fileExtension = filename.split(".").pop()?.toLowerCase();
             const contentType = getContentType(fileExtension);
             const blobStream = blob.createWriteStream({
@@ -68,7 +72,6 @@ export async function uploadFile(filename, file, organisation) {
                     contentType: contentType,
                 },
             });
-            // Handle stream events
             blobStream.on("error", (error) => {
                 console.error("Upload error:", error);
                 resolve({
@@ -81,8 +84,8 @@ export async function uploadFile(filename, file, organisation) {
                 resolve({
                     success: true,
                     message: "File uploaded successfully",
-                    filename,
-                    url: `https://storage.cloud.google.com/${bucketName}/${filename}`,
+                    filename: folderPath,
+                    url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
                 });
             });
             if (Buffer.isBuffer(file)) {
@@ -111,15 +114,12 @@ export async function uploadFileToGcp(filename, file, organisation) {
             if (!organisation) {
                 throw new Error("Organisation name is required");
             }
-            // Convert organisation name to valid bucket name (lowercase, no special chars)
             const bucketName = organisation.toLowerCase().replace(/[^a-z0-9-]/g, "-");
-            // Check if bucket exists
             const [bucketExists] = await storage.bucket(bucketName).exists();
             let bucket;
             if (!bucketExists) {
-                // Create new bucket
                 [bucket] = await storage.createBucket(bucketName, {
-                    location: "US", // Specify your desired location
+                    location: "US",
                     storageClass: "STANDARD",
                 });
                 console.log(`Bucket ${bucketName} created.`);
@@ -129,17 +129,13 @@ export async function uploadFileToGcp(filename, file, organisation) {
                 console.log(`Using existing bucket ${bucketName}.`);
             }
             const blob = bucket.file(filename);
-            // Set appropriate content type based on file extension
             const fileExtension = filename.split(".").pop()?.toLowerCase();
             const contentType = getContentType(fileExtension);
             const blobStream = blob.createWriteStream({
                 resumable: false,
                 gzip: true,
-                metadata: {
-                    contentType: contentType,
-                },
+                metadata: { contentType: contentType },
             });
-            // Handle stream events
             blobStream.on("error", (error) => {
                 console.error("Upload error:", error);
                 resolve({

@@ -20,6 +20,7 @@
     "axios": "^1.7.7",
     "clouddeskpdf": "file:",
     "docxtemplater": "^3.51.2",
+    "dotenv": "^16.4.5",
     "fastify": "^5.0.0",
     "fastify-cookie": "^5.6.1",
     "fastify-multer": "^2.0.3",
