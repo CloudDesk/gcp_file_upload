@@ -18,9 +18,6 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
       return error;
     }
   });
-  ;
-
-
   fastify.post("/file-upload/:organisation", async (req: any, reply: any) => {
     console.log(req, "req from file upload");
     try {
@@ -46,15 +43,15 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
 
   fastify.post('/product/images/:productid', async (req: any, reply: any) => {
     const parts = req.files() as any;
-    console.log(req.params.productid, 'req.body');
+    console.log(req.params.productid, "req.body");
     const processedFiles: any = {};
     let data: any = await imageResize(req);
-    data.productid = req.params.productid
+    data.productid = req.params.productid;
     try {
-      console.log('BEGIN');
+      console.log("BEGIN");
       let dataresult = await axios.post(REVO_PRODUCT_IMAGE_API, data);
-      console.log('CLOS');
-      console.log(dataresult, 'dataresult');
+      console.log("CLOS");
+      console.log(dataresult, "dataresult");
       reply.send(dataresult.data.product);
       // reply.send("test");
       // console.log(dataresult);
@@ -64,9 +61,7 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
     }
   });
 
-  // fastify.post('/product/images/:productid',revoimagecontroller.uploadimage);
-
-
+  //fastify.post("/product/images/:productid", revoimagecontroller.uploadimage);
 
   done();
 };
