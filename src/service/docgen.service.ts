@@ -5,6 +5,7 @@ import {
   uploadFileToGcp,
   uploadPDF,
   uploadPDFtwo,
+  getBucketFiles
 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx_pdf_conversion.js";
 
@@ -26,7 +27,7 @@ export namespace docgenService {
     }
   };
 
-  
+
 
   export const insertfileupload = async (req: any, reply: any) => {
     try {
@@ -44,4 +45,19 @@ export namespace docgenService {
       return error;
     }
   };
+
+  export const getFiles = async (req: any, reply: any) => {
+    try {
+      let organisation = req.params.organisation;
+      let uploadfile = await getBucketFiles(organisation);
+      console.log(uploadfile, "uploadfile");
+      return uploadfile.files;
+      // reply.send(uploadfile);
+      // console.log(file, "file");
+      // console.log(filename, "filename");
+    } catch (error) {
+      return error;
+    }
+  };
+
 }

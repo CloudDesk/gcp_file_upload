@@ -33,7 +33,18 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
     }
   });
 
-  // fastify.post("/product/images/:productid", async (req: any, reply: any) => {
+  fastify.get("/get-files/:organisation", async (req: any, reply: any) => {
+    console.log(req, "req from file upload");
+    try {
+      let data = await docgenController.getFiles(req, reply);
+      console.log(data, "data from file upload");
+      return data;
+    } catch (error) {
+      return error;
+    }
+  });
+
+  // fastify.post('/product/images/:productid', async (req: any, reply: any) => {
   //   const parts = req.files() as any;
   //   console.log(req.params.productid, "req.body");
   //   const processedFiles: any = {};

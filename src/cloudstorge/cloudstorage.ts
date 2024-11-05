@@ -358,12 +358,91 @@ export async function uploadFileToGcp(
   });
 }
 
+// export async function getBucketFiles(
+//   bucketName: string,
+//   options?: {
+//     prefix?: string;
+//     maxResults?: number;
+//     pageToken?: string;
+//   }
+// ): Promise<{
+//   success: boolean;
+//   message: string;
+//   files?: any;
+//   nextPageToken?: string;
+//   error?: string;
+// }> {
+//   try {
+//     if (!bucketName) {
+//       throw new Error("Bucket name is required");
+//     }
+
+//     // Sanitize bucket name
+//     const sanitizedBucketName = bucketName
+//       .toLowerCase()
+//       .replace(/[^a-z0-9-]/g, "-");
+
+//     // Check if bucket exists
+//     const [bucketExists] = await storage.bucket(sanitizedBucketName).exists();
+//     if (!bucketExists) {
+//       return {
+//         success: false,
+//         message: "Bucket not found",
+//         error: `Bucket ${sanitizedBucketName} does not exist`,
+//       };
+//     }
+
+//     const bucket = storage.bucket(sanitizedBucketName);
+
+//     // Get files with options
+//     const [files, nextPage] = await bucket.getFiles({
+//       prefix: options?.prefix || "",
+//       maxResults: options?.maxResults,
+//       pageToken: options?.pageToken,
+//     });
+
+//     // Format file metadata
+//     const formattedFiles = await Promise.all(
+//       files.map(async (file) => {
+//         const [metadata]: any = await file.getMetadata();
+
+//         // Convert size to human-readable format
+//         const size = formatFileSize(parseInt(metadata.size));
+
+//         return {
+//           name: file.name,
+//           url: `https://storage.cloud.google.com/${sanitizedBucketName}/${file.name}`,
+//           size: size,
+//           contentType: metadata.contentType,
+//           created: metadata.timeCreated,
+//           updated: metadata.updated,
+//         };
+//       })
+//     );
+
+//     return {
+//       success: true,
+//       message: "Files retrieved successfully",
+//       files: formattedFiles,
+//       ...(nextPage && { nextPageToken: nextPage.pageToken }),
+//     };
+//   } catch (error: any) {
+//     console.error("Error retrieving files:", error);
+//     return {
+//       success: false,
+//       message: "Failed to retrieve files",
+//       error: error.message,
+//     };
+//   }
+// }
+
 export async function getBucketFiles(
   bucketName: string,
   options?: {
     prefix?: string;
     maxResults?: number;
     pageToken?: string;
+    urlExpiration?: number; // Duration in minutes for signed URL
   }
 ): Promise<{
   success: boolean;
@@ -401,7 +480,7 @@ export async function getBucketFiles(
       pageToken: options?.pageToken,
     });
 
-    // Format file metadata
+    // Format file metadata and generate signed URLs
     const formattedFiles = await Promise.all(
       files.map(async (file) => {
         const [metadata]: any = await file.getMetadata();
@@ -409,9 +488,17 @@ export async function getBucketFiles(
         // Convert size to human-readable format
         const size = formatFileSize(parseInt(metadata.size));
 
+        // Generate signed URL
+        const [signedUrl] = await file.getSignedUrl({
+          version: 'v4',
+          action: 'read',
+          expires: Date.now() + ((options?.urlExpiration || 15) * 60 * 1000), // Default 15 minutes
+        });
+
         return {
           name: file.name,
           url: `https://storage.cloud.google.com/${sanitizedBucketName}/${file.name}`,
+          signedUrl: signedUrl,
           size: size,
           contentType: metadata.contentType,
           created: metadata.timeCreated,
@@ -459,3 +546,5 @@ function getContentType(extension?: string): string {
 
   return contentTypes[extension || ""] || "application/octet-stream";
 }
+
+
