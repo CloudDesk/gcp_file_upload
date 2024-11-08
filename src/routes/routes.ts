@@ -6,7 +6,7 @@ import { REVO_PRODUCT_IMAGE_API } from "../utils/config.js";
 import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
 import { revoratingsuploadcontroller } from "../controller/revoratinguploads.controller.js";
 import { uploadRatingimages } from "../cloudstorge/cloudstorage.js";
-import filesUpload from "../multer/multer.js";
+import { filesUpload } from "../multer/multer.js";
 export const pdfroute = (fastify: any, opts: any, done: any) => {
   fastify.get("/", async (req: any, reply: any) => {
     return { hello: "world" };
@@ -100,11 +100,11 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
   //   }
   //);
 
-  filesUpload;
   fastify.post(
     "/uploaddataistest",
     { preHandler: [filesUpload] },
     async (req, reply) => {
+      console.log(req.body, "PROCESSED TEXT FIELDS");
       console.log(req.files.length, "REWQ FILES");
       const files = req.files;
       console.log(files);
@@ -115,7 +115,12 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
       }
 
       try {
-        // const uploadPromises = files.map(file => uploadToGCP(file));
+        let data = await uploadRatingimages(
+          files,
+          "revo_ratings_images",
+          req.body.productid
+        );
+        console.log(data);
         // const uploadedFiles = await Promise.all(uploadPromises);
 
         reply.send({ status: "success" });
