@@ -50,92 +50,6 @@ export async function uploadDynamicFiles(
   }
 }
 
-// export async function uploadRatingimages(
-//   files: string[],
-//   bucketNameData: string,
-//   productid: string
-// ) {
-//   try {
-//     console.log(files, "files");
-//     return new Promise((resolve, reject) => {
-//       try {
-//         if (!files || !files || files.length === 0) {
-//           return resolve({
-//             success: false,
-//             message: "No files provided",
-//           });
-//         }
-//         console.log(files);
-//         files &&
-//           files &&
-//           files.forEach(async (file: any) => {
-//             console.log(file, "file");
-//             const bucket = storage.bucket(bucketNameData);
-//             let filename = file.originalname;
-//             // Build the folder path based on productId and size
-//             const folderPath = productid
-//               ? `${productid}/${filename}`
-//               : `${filename}`;
-//             console.log(folderPath, "folderPath");
-//             const blob = bucket.file(folderPath);
-
-//             const fileExtension = file.originalname
-//               .split(".")
-//               .pop()
-//               ?.toLowerCase();
-//             console.log(fileExtension, "fileExtension");
-//             const contentType = getContentType(fileExtension);
-//             console.log(contentType, "contentType");
-//             const blobStream = blob.createWriteStream({
-//               resumable: false,
-//               gzip: true,
-//               metadata: {
-//                 contentType: contentType,
-//               },
-//             });
-
-//             blobStream.on("error", (error) => {
-//               console.error("Upload error:", error);
-//               resolve({
-//                 success: false,
-//                 message: "File upload failed",
-//                 error: error.message,
-//               });
-//             });
-
-//             blobStream.on("finish", () => {
-//               resolve({
-//                 success: true,
-//                 message: "File uploaded successfully",
-//                 filename: folderPath,
-//                 url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
-//               });
-//             });
-
-//             // Use the proper way to handle the file based on its structure
-//             if (Buffer.isBuffer(file.buffer)) {
-//               blobStream.end(file.buffer);
-//             } else if (typeof file.createReadStream === "function") {
-//               file.createReadStream().pipe(blobStream);
-//             } else {
-//               throw new Error("Unsupported file format");
-//             }
-//           });
-//       } catch (error: any) {
-//         console.error("Error uploading file:", error);
-//         resolve({
-//           success: false,
-//           message: "File upload failed",
-//           error: error.message,
-//         });
-//       }
-//     });
-//   } catch (error) {
-//     console.error("Error uploading file:", error);
-//   }
-// }
-
-//uploading product image  for revo
 
 interface MulterFile {
   fieldname: string;
@@ -148,94 +62,182 @@ interface MulterFile {
   size: number;
 }
 
-export async function uploadRatingimages(
-  files: MulterFile[],
-  bucketNameData: string,
-  productid: string
-) {
+// export async function uploadRatingimages(
+//   files: MulterFile[],
+//   bucketNameData: string,
+//   productid: string
+// ) {
+//   try {
+//     return new Promise((resolve, reject) => {
+//       try {
+//         if (!files || files.length === 0) {
+//           return resolve({
+//             success: false,
+//             message: "No files provided",
+//           });
+//         }
+
+//         files.forEach(async (file: MulterFile) => {
+//           console.log(file, "file");  
+//           const bucket = storage.bucket(bucketNameData);
+
+//           // Use the original filename
+//           const folderPath = productid
+//             ? `${productid}/${file.originalname}`
+//             : file.originalname;
+
+//           const blob = bucket.file(folderPath);
+
+//           const blobStream = blob.createWriteStream({
+//             resumable: false,
+//             gzip: true,
+//             metadata: {
+//               contentType: file.mimetype, // Use the mimetype from the Multer file object
+//             },
+//           });
+
+//           blobStream.on("error", (error) => {
+//             console.error("Upload error:", error);
+//             resolve({
+//               success: false,
+//               message: "File upload failed",
+//               error: error.message,
+//             });
+//           });
+
+//           blobStream.on("finish", () => {
+//             resolve({
+//               success: true,
+//               message: "File uploaded successfully",
+//               filename: folderPath,
+//               url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
+//             });
+//           });
+
+//           try {
+//             // Create a read stream from the file path provided by Multer
+//             const fileStream = createReadStream(file.path);
+
+//             fileStream.on("error", (error) => {
+//               console.error("File read error:", error);
+//               resolve({
+//                 success: false,
+//                 message: "File read failed",
+//                 error: error.message,
+//               });
+//             });
+
+//             fileStream.pipe(blobStream);
+//           } catch (error: any) {
+//             console.error("Error creating file stream:", error);
+//             resolve({
+//               success: false,
+//               message: "File stream creation failed",
+//               error: error.message,
+//             });
+//           }
+//         });
+//       } catch (error: any) {
+//         console.error("Error uploading file:", error);
+//         resolve({
+//           success: false,
+//           message: "File upload failed",
+//           error: error.message,
+//         });
+//       }
+//     });
+//   } catch (error) {
+//     console.error("Error uploading file:", error);
+//     throw error;
+//   }
+// }
+
+export async function uploadRevoFiles(files: MulterFile[],bucketNameData: string,foldername: string) {
   try {
-    return new Promise((resolve, reject) => {
-      try {
-        if (!files || files.length === 0) {
-          return resolve({
+    if (!files || files.length === 0) {
+      return {
+        success: false,
+        message: "No files provided",
+      };
+    }
+
+    // Process each file upload as a promise and gather all results
+    const uploadPromises = files.map((file) =>
+      new Promise((resolve) => {
+        const bucket = storage.bucket(bucketNameData);
+        const folderPath = foldername
+          ? `${foldername}/${file.originalname}`
+          : file.originalname;
+
+        const blob = bucket.file(folderPath);
+        const blobStream = blob.createWriteStream({
+          resumable: false,
+          gzip: true,
+          metadata: {
+            contentType: file.mimetype,
+          },
+        });
+
+        blobStream.on("error", (error) => {
+          console.error("Upload error:", error);
+          resolve({
             success: false,
-            message: "No files provided",
+            message: "File upload failed",
+            filename: file.originalname,
+            error: error.message,
+          });
+        });
+
+        blobStream.on("finish", () => {
+          resolve({
+            success: true,
+            message: "File uploaded successfully",
+            filename: folderPath,
+            url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
+          });
+        });
+
+        try {
+          const fileStream = createReadStream(file.path);
+
+          fileStream.on("error", (error) => {
+            console.error("File read error:", error);
+            resolve({
+              success: false,
+              message: "File read failed",
+              filename: file.originalname,
+              error: error.message,
+            });
+          });
+
+          fileStream.pipe(blobStream);
+        } catch (error: any) {
+          console.error("Error creating file stream:", error);
+          resolve({
+            success: false,
+            message: "File stream creation failed",
+            filename: file.originalname,
+            error: error.message,
           });
         }
-
-        files.forEach(async (file: MulterFile) => {
-          const bucket = storage.bucket(bucketNameData);
-
-          // Use the original filename
-          const folderPath = productid
-            ? `${productid}/${file.originalname}`
-            : file.originalname;
-
-          const blob = bucket.file(folderPath);
-
-          const blobStream = blob.createWriteStream({
-            resumable: false,
-            gzip: true,
-            metadata: {
-              contentType: file.mimetype, // Use the mimetype from the Multer file object
-            },
-          });
-
-          blobStream.on("error", (error) => {
-            console.error("Upload error:", error);
-            resolve({
-              success: false,
-              message: "File upload failed",
-              error: error.message,
-            });
-          });
-
-          blobStream.on("finish", () => {
-            resolve({
-              success: true,
-              message: "File uploaded successfully",
-              filename: folderPath,
-              url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
-            });
-          });
-
-          try {
-            // Create a read stream from the file path provided by Multer
-            const fileStream = createReadStream(file.path);
-
-            fileStream.on("error", (error) => {
-              console.error("File read error:", error);
-              resolve({
-                success: false,
-                message: "File read failed",
-                error: error.message,
-              });
-            });
-
-            fileStream.pipe(blobStream);
-          } catch (error: any) {
-            console.error("Error creating file stream:", error);
-            resolve({
-              success: false,
-              message: "File stream creation failed",
-              error: error.message,
-            });
-          }
-        });
-      } catch (error: any) {
-        console.error("Error uploading file:", error);
-        resolve({
-          success: false,
-          message: "File upload failed",
-          error: error.message,
-        });
-      }
-    });
-  } catch (error) {
-    console.error("Error uploading file:", error);
-    throw error;
+      })
+    );
+    const uploadResults = await Promise.all(uploadPromises);
+    return {
+      success: true,
+      message: "Files processed",
+      files: uploadResults, // Contains an array of all file upload results
+    };
+  } catch (error: any) {
+    console.error("Error uploading files:", error);
+    return {
+      success: false,
+      message: "File upload failed",
+      error: error.message,
+    };
   }
 }
+
 
 export async function uploadFile(
   filename: string,
@@ -309,13 +311,7 @@ export async function uploadFile(
 }
 
 //uploading product image  for revo
-export async function uploadProductImage(
-  filename: string,
-  file: any,
-  size: "large" | "medium" | "small",
-  productId?: number,
-  organisation?: string
-): Promise<{
+export async function uploadProductImage(filename: string,file: any,size: "large" | "medium" | "small",productId?: number,organisation?: string): Promise<{
   success: boolean;
   message: string;
   filename?: string;
@@ -380,11 +376,72 @@ export async function uploadProductImage(
   });
 }
 
-export async function uploadFileToGcp(
-  filename: string,
-  file: any,
-  organisation?: string
-): Promise<{
+export async function uploadPoInvoice(bucketName : string , filename: string,file: any,foldername?: number): Promise<{
+  success: boolean;
+  message: string;
+  filename?: string;
+  error?: string;
+  url?: string;
+}> {
+  return new Promise((resolve, reject) => {
+    try {
+      const bucket = storage.bucket(bucketName);
+
+      // Build the folder path based on productId and size
+      const folderPath = foldername
+        ? `${foldername}/${filename}`
+        : `${filename}`;
+      console.log(folderPath, "folderPath");
+      const blob = bucket.file(folderPath);
+
+      const fileExtension = filename.split(".").pop()?.toLowerCase();
+      const contentType = getContentType(fileExtension);
+
+      const blobStream = blob.createWriteStream({
+        resumable: false,
+        gzip: true,
+        metadata: {
+          contentType: contentType,
+        },
+      });
+
+      blobStream.on("error", (error) => {
+        console.error("Upload error:", error);
+        resolve({
+          success: false,
+          message: "File upload failed",
+          error: error.message,
+        });
+      });
+
+      blobStream.on("finish", () => {
+        resolve({
+          success: true,
+          message: "File uploaded successfully",
+          filename: folderPath,
+          url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
+        });
+      });
+
+      if (Buffer.isBuffer(file)) {
+        blobStream.end(file);
+      } else if (typeof file.pipe === "function") {
+        file.pipe(blobStream);
+      } else {
+        throw new Error("Unsupported file format");
+      }
+    } catch (error: any) {
+      console.error("Error uploading file:", error);
+      resolve({
+        success: false,
+        message: "File upload failed",
+        error: error.message,
+      });
+    }
+  });
+}
+
+export async function uploadFileToGcp(filename: string,file: any,organisation?: string): Promise<{
   success: boolean;
   message: string;
   filename?: string;

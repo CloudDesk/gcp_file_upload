@@ -2,21 +2,21 @@ import axios from "axios";
 import Multer from "fastify-multer";
 import { docgenController } from "../controller/docgen.controller.js";
 import imageResize from "../utils/imageresize.js";
-import { REVO_PRODUCT_IMAGE_API } from "../utils/config.js";
+import { REVO_PRODUCT_IMAGE_API, REVO_PRODUCT_RATING_API } from "../utils/config.js";
 import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
 import { revoratingsuploadcontroller } from "../controller/revoratinguploads.controller.js";
-import { uploadRatingimages } from "../cloudstorge/cloudstorage.js";
+import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
 import { filesUpload } from "../multer/multer.js";
+import { revoPoInvoiceController } from "../controller/revoPoInvoce.controller.js";
+import { revoPrQuotesController } from "../controller/revoPrQuotes.controller.js";
+import { revoTicketController } from "../controller/revoTicketController.js";
 export const pdfroute = (fastify: any, opts: any, done: any) => {
   fastify.get("/", async (req: any, reply: any) => {
     return { hello: "world" };
   });
   fastify.post("/pdf", async (req: any, reply: any) => {
     try {
-      let data = await docgenController.insertfileconversiondocgendta(
-        req,
-        reply
-      );
+      let data = await docgenController.insertfileconversiondocgendta(req, reply);
       return data;
     } catch (error) {
       return error;
@@ -44,94 +44,52 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
     }
   });
 
-  // fastify.post('/product/images/:productid', async (req: any, reply: any) => {
-  //   const parts = req.files() as any;
-  //   console.log(req.params.productid, "req.body");
-  //   const processedFiles: any = {};
-  //   let data: any = await imageResize(req);
-  //   data.productid = req.params.productid;
-  //   try {
-  //     console.log("BEGIN");
-  //     let dataresult = await axios.post(REVO_PRODUCT_IMAGE_API, data);
-  //     console.log("CLOS");
-  //     console.log(dataresult, "dataresult");
-  //     reply.send(dataresult.data.product);
-  //     // reply.send("test");
-  //     // console.log(dataresult);
-  //   } catch (error) {
-  //     console.log(error.message);
-  //     reply.send(error.message);
-  //   }
-  // });
 
   fastify.post("/product/images/:productid", revoimagecontroller.uploadimage);
-  fastify.post(
-    "/ratings/uploads",
-    revoratingsuploadcontroller.revoratingupload
-  );
+  fastify.post("/po/invoice", { preHandler: [filesUpload] }, revoPoInvoiceController.revoPoInvoiceController);
+  fastify.post("/pr/quotes", { preHandler: [filesUpload] }, revoPrQuotesController.revoPrQuotesController);
+  fastify.post("/tickets/images", { preHandler: [filesUpload] }, revoTicketController.revoTicketController);
 
-  // Configure multer for file uploads
-  // const multerStorage = Multer.memoryStorage(); // Store files in memory
-  // const upload = Multer({ storage: multerStorage });
+  //Rating with image upload
+  fastify.post("/uploadrating/images", { preHandler: [filesUpload] }, async (req, reply) => {
+    console.log(req.body, "PROCESSED TEXT FIELDS");
+    console.log(req.files.length, "REWQ FILES");
+    const files = req.files;
+    console.log(files);
+    try {
+      let data: any
+      if (files.length > 0) {
+        if (!req.body.productid) {
+          reply.status(400).send("Product id is missing");
+        }
 
-  // Endpoint to upload multiple files
-
-  // Define your route with upload middleware
-  // fastify.post(
-  //   "/uploaddatais",
-  //   { preHandler: [upload.array("files", 10)] },
-  //   async (req, reply) => {
-  //     console.log(req.files, "REWQ FILES");
-  //     const fields = req.body;
-  //     const files = req.files;
-
-  //     console.log(fields, "PROCESSED TEXT FIELDS");
-  //     console.log(files.length, "PROCESSED FILES");
-
-  //     // let data = await uploadRatingimages(
-  //     //   files,
-  //     //   "revo_ratings_images",
-  //     //   req.body.productid
-  //     // );
-  //     // console.log(data);
-  //     // Handle your business logic here...
-
-  //     reply.send({ status: "success" });
-  //   }
-  //);
-
-  fastify.post(
-    "/uploaddataistest",
-    { preHandler: [filesUpload] },
-    async (req, reply) => {
-      console.log(req.body, "PROCESSED TEXT FIELDS");
-      console.log(req.files.length, "REWQ FILES");
-      const files = req.files;
-      console.log(files);
-      if (!files || files.length === 0) {
-        return reply
-          .status(400)
-          .send({ status: "fail", message: "No files uploaded" });
+        data = await uploadRevoFiles(files, "revo_ratings_images", req.body.productid);
+        console.log(data, 'data from cloud storage');
       }
-
-      try {
-        let data = await uploadRatingimages(
-          files,
-          "revo_ratings_images",
-          req.body.productid
-        );
-        console.log(data);
-        // const uploadedFiles = await Promise.all(uploadPromises);
-
-        reply.send({ status: "success" });
-      } catch (error) {
-        console.error("Error uploading files:", error);
-        reply
-          .status(500)
-          .send({ status: "fail", message: "File upload failed" });
+      let ratingurl = []
+      if (data.success && data.files.length > 0) {
+        data.files.forEach((file: any) => {
+          ratingurl.push(file.url)
+        }
+        )
       }
+      req.body.url = ratingurl
+      let insertrating = await axios.post(REVO_PRODUCT_RATING_API, req.body)
+      console.log(insertrating, 'insertrating');
+      if (insertrating.data) {
+        reply.send(insertrating.data);
+      }
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      reply
+        .status(500)
+        .send({ status: "fail", message: "File upload failed" });
     }
+  }
   );
 
   done();
 };
+
+
+//  fastify.post("/ratings/uploads",revoratingsuploadcontroller.revoratingupload);
