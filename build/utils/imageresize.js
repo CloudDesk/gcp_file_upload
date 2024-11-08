@@ -1,5 +1,5 @@
-import Jimp from 'jimp';
-import { uploadFile } from '../cloudstorge/cloudstorage.js';
+import Jimp from "jimp";
+import { uploadProductImage } from "../cloudstorge/cloudstorage.js";
 // const imageResize = async (request: any) => {
 //     try {
 //         const resizedImageUrls = [];
@@ -50,14 +50,14 @@ const imageResize = async (request) => {
         const resizedImageUrls = [];
         const upsertFiles = request.files();
         const productid = request.params.productid;
-        console.log(productid, 'productid');
+        console.log(productid, "productid");
         for await (const file of upsertFiles) {
-            console.log(file, 'file is ====>>>');
+            console.log(file, "file is ====>>>");
             const chunks = [];
             // Read file into buffer
             try {
                 for await (const chunk of file.file) {
-                    chunks.push(chunk);
+                    chunks.push(Buffer.from(chunk));
                 }
             }
             catch (error) {
@@ -67,19 +67,21 @@ const imageResize = async (request) => {
             const fileBuffer = Buffer.concat(chunks);
             try {
                 const image = await Jimp.read(fileBuffer);
-                // Check the format of the image
                 console.log("Image loaded successfully", image);
                 const largeBuffer = await image.clone().getBufferAsync(Jimp.MIME_JPEG);
-                const largeUrl = await uploadFile(`large_${file.filename}`, largeBuffer, 'large', productid);
-                console.log(largeUrl, 'largeUrl');
+                //const largeUrl = await uploadFile(`large_${file.filename}`, largeBuffer, 'large', productid);
+                const largeUrl = await uploadProductImage(`large_${file.filename}`, largeBuffer, "large", productid);
+                console.log(largeUrl, "largeUrl");
                 resizedImageUrls.push({ Large: largeUrl.url });
-                const mediumImage = image.clone().resize(image.bitmap.width / 2, Jimp.AUTO);
+                const mediumImage = image
+                    .clone()
+                    .resize(image.bitmap.width / 2, Jimp.AUTO);
                 const mediumBuffer = await mediumImage.getBufferAsync(Jimp.MIME_JPEG);
-                const mediumUrl = await uploadFile(`medium_${file.filename}`, mediumBuffer, 'medium', productid);
+                const mediumUrl = await uploadProductImage(`medium_${file.filename}`, mediumBuffer, "medium", productid);
                 resizedImageUrls.push({ Medium: mediumUrl.url });
                 const smallImage = image.clone().resize(100, Jimp.AUTO);
                 const smallBuffer = await smallImage.getBufferAsync(Jimp.MIME_JPEG);
-                const smallUrl = await uploadFile(`small_${file.filename}`, smallBuffer, 'small', productid);
+                const smallUrl = await uploadProductImage(`small_${file.filename}`, smallBuffer, "small", productid);
                 resizedImageUrls.push({ Small: smallUrl.url });
             }
             catch (error) {
@@ -102,7 +104,11 @@ const imageResize = async (request) => {
     }
     catch (error) {
         console.error("Error in image resizing function:", error);
-        return { statusCode: 500, error: "Internal Server Error", message: error.message || "Error in Resizing Images" };
+        return {
+            statusCode: 500,
+            error: "Internal Server Error",
+            message: error.message || "Error in Resizing Images",
+        };
     }
 };
 export default imageResize;

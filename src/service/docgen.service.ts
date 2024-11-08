@@ -1,11 +1,8 @@
 import { fileURLToPath } from "url";
 // import GenerateDocx from "../docxtemplate/docx.js";
 import {
-  uploadFile,
   uploadFileToGcp,
-  uploadPDF,
-  uploadPDFtwo,
-  getBucketFiles
+  getBucketFiles,
 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx_pdf_conversion.js";
 
@@ -26,8 +23,6 @@ export namespace docgenService {
       return error;
     }
   };
-
-
 
   export const insertfileupload = async (req: any, reply: any) => {
     try {
@@ -59,5 +54,4 @@ export namespace docgenService {
       return error;
     }
   };
-
 }

@@ -21,5 +21,16 @@ export var docgenController;
             return error;
         }
     };
+    docgenController.getFiles = async (req, reply) => {
+        try {
+            console.log("test");
+            let inserstpdf = await docgenService.getFiles(req, reply);
+            console.log(inserstpdf, "inserstpdf");
+            return inserstpdf;
+        }
+        catch (error) {
+            return error;
+        }
+    };
 })(docgenController || (docgenController = {}));
 //# sourceMappingURL=docgen.controller.js.map

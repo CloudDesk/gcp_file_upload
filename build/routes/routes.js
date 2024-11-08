@@ -1,7 +1,13 @@
 import axios from "axios";
 import { docgenController } from "../controller/docgen.controller.js";
-import imageResize from "../utils/imageresize.js";
-import { REVO_PRODUCT_IMAGE_API } from "../utils/config.js";
+import { REVO_PRODUCT_RATING_API, } from "../utils/config.js";
+import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
+// import { revoratingsuploadcontroller } from "../controller/revoratinguploads.controller.js";
+import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
+import { filesUpload } from "../multer/multer.js";
+import { revoPoInvoiceController } from "../controller/revoPoInvoce.controller.js";
+import { revoPrQuotesController } from "../controller/revoPrQuotes.controller.js";
+import { revoTicketController } from "../controller/revoTicketController.js";
 export const pdfroute = (fastify, opts, done) => {
     fastify.get("/", async (req, reply) => {
         return { hello: "world" };
@@ -15,7 +21,6 @@ export const pdfroute = (fastify, opts, done) => {
             return error;
         }
     });
-    ;
     fastify.post("/file-upload/:organisation", async (req, reply) => {
         console.log(req, "req from file upload");
         try {
@@ -27,27 +32,57 @@ export const pdfroute = (fastify, opts, done) => {
             return error;
         }
     });
-    fastify.post('/product/images/:productid', async (req, reply) => {
-        const parts = req.files();
-        console.log(req.params.productid, 'req.body');
-        const processedFiles = {};
-        let data = await imageResize(req);
-        data.productid = req.params.productid;
+    fastify.get("/get-files/:organisation", async (req, reply) => {
+        console.log(req, "req from file upload");
         try {
-            console.log('BEGIN');
-            let dataresult = await axios.post(REVO_PRODUCT_IMAGE_API, data);
-            console.log('CLOS');
-            console.log(dataresult, 'dataresult');
-            reply.send(dataresult.data.product);
-            // reply.send("test");
-            // console.log(dataresult);
+            let data = await docgenController.getFiles(req, reply);
+            console.log(data, "data from file upload");
+            return data;
         }
         catch (error) {
-            console.log(error.message);
-            reply.send(error.message);
+            return error;
         }
     });
-    // fastify.post('/product/images/:productid',revoimagecontroller.uploadimage);
+    fastify.post("/product/images/:productid", revoimagecontroller.uploadimage);
+    fastify.post("/po/invoice", { preHandler: [filesUpload] }, revoPoInvoiceController.revoPoInvoiceController);
+    fastify.post("/pr/quotes", { preHandler: [filesUpload] }, revoPrQuotesController.revoPrQuotesController);
+    fastify.post("/tickets/images", { preHandler: [filesUpload] }, revoTicketController.revoTicketController);
+    //Rating with image upload
+    fastify.post("/uploadrating/images", { preHandler: [filesUpload] }, async (req, reply) => {
+        console.log(req.body, "PROCESSED TEXT FIELDS");
+        console.log(req.files.length, "REWQ FILES");
+        const files = req.files;
+        console.log(files);
+        try {
+            let data;
+            if (files.length > 0) {
+                if (!req.body.productid) {
+                    reply.status(400).send("Product id is missing");
+                }
+                data = await uploadRevoFiles(files, "revo_ratings_images", req.body.productid);
+                console.log(data, "data from cloud storage");
+            }
+            let ratingurl = [];
+            if (data.success && data.files.length > 0) {
+                data.files.forEach((file) => {
+                    ratingurl.push(file.url);
+                });
+            }
+            req.body.url = ratingurl;
+            let insertrating = await axios.post(REVO_PRODUCT_RATING_API, req.body);
+            console.log(insertrating, "insertrating");
+            if (insertrating.data) {
+                reply.send(insertrating.data);
+            }
+        }
+        catch (error) {
+            console.error("Error uploading files:", error);
+            reply
+                .status(500)
+                .send({ status: "fail", message: "File upload failed" });
+        }
+    });
     done();
 };
+//  fastify.post("/ratings/uploads",revoratingsuploadcontroller.revoratingupload);
 //# sourceMappingURL=routes.js.map

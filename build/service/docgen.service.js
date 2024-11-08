@@ -1,5 +1,5 @@
 // import GenerateDocx from "../docxtemplate/docx.js";
-import { uploadFileToGcp, } from "../cloudstorge/cloudstorage.js";
+import { uploadFileToGcp, getBucketFiles, } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx_pdf_conversion.js";
 export var docgenService;
 (function (docgenService) {
@@ -26,6 +26,20 @@ export var docgenService;
             const { file, filename } = filesdata;
             let uploadfile = await uploadFileToGcp(filename, file, organisation);
             reply.send(uploadfile);
+            // console.log(file, "file");
+            // console.log(filename, "filename");
+        }
+        catch (error) {
+            return error;
+        }
+    };
+    docgenService.getFiles = async (req, reply) => {
+        try {
+            let organisation = req.params.organisation;
+            let uploadfile = await getBucketFiles(organisation);
+            console.log(uploadfile, "uploadfile");
+            return uploadfile.files;
+            // reply.send(uploadfile);
             // console.log(file, "file");
             // console.log(filename, "filename");
         }

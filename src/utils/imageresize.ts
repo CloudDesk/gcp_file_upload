@@ -72,7 +72,7 @@ const imageResize = async (request: any) => {
       // Read file into buffer
       try {
         for await (const chunk of file.file) {
-          chunks.push(chunk);
+          chunks.push(Buffer.from(chunk));
         }
       } catch (error) {
         console.error("Error reading file stream:", error);

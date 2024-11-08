@@ -1,5 +1,5 @@
 // import { revoratingsuploadservice } from "../service/revoratinguploads.service.js";
-
+export {};
 // export const revoratingsuploadcontroller = {
 //   revoratingupload: async (req: any, reply: any) => {
 //     try {
@@ -15,3 +15,4 @@
 //     }
 //   },
 // };
+//# sourceMappingURL=revoratinguploads.controller.js.map
