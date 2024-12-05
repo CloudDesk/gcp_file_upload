@@ -1,46 +1,65 @@
 import fs from "fs/promises";
 import { Files, Params } from "../interface/fileupload.interface.js";
 import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
+import GenerateDocx from "../docxtemplate/docx.js";
+import { url } from "inspector";
 
 export const fileUploadService = {
-  uploadFile: async (reqBody: Params, files: Files) => {
+  uploadFile: async (request, poData, reply) => {
+    console.log(poData, "PODATA");
+    console.log(request.params, "Params");
+    const templateType = request.params.templatetype;
+    console.log(templateType, "templateType");
+    let template;
+    let bucketname = request.params.organisation;
     try {
-      console.log(reqBody, "reqBody from file upload service");
-      const { bucketName, folderName } = reqBody;
-      console.log(files, "files from file upload service");
-
-      const file = files[0];
-      const { path, originalname: filename } = file;
-
-      const relativeFilePath = path.split("gcp_file_upload/")[1];
-      console.log("Relative file path:", relativeFilePath);
-      const fileBuffer = await fs.readFile(path);
-      console.log("File buffer size:", fileBuffer.length, "bytes");
-
-      const result = await uploadFilesToGcs2(
-        bucketName,
-        filename,
-        file,
-        folderName
-      );
-
-      //   const result = await uploadFilesToGcs2(
-      //     bucketName,
-      //     folderName,
-      //     relativeFilePath,
-      //     filename
-      //   );
-      //   const result = await uploadFileToGCS(bucketName, folderName, path);
-      console.log(result, "result from file upload service");
-
-      if (result.success) {
-        return { message: "File uploaded successfully", url: result.url };
-      } else {
-        throw new Error(result.message);
+      if (templateType === "po") {
+        template = "po/Revo-PO new 1.docx";
+        bucketname = "revo-po";
+      } else if (templateType === "pr") {
+        template = "pr/Revo-PR.docx";
+        bucketname = "revo-pr";
+      } else if (templateType === "costestimation") {
+        template = "costestimation/costestimation.docx";
+        bucketname = "revo-cost-estimation";
       }
+      let result = await GenerateDocx(request, poData, template);
+      console.log(result, "result from invoiceData");
+      const fileBuffer = await fs.readFile(result.relativeFilePath);
+      let uploadPdfToGcs = await uploadFilesToGcs2(
+        bucketname,
+        result.filename,
+        fileBuffer,
+        result.poNumber
+      );
+      console.log(uploadPdfToGcs, "uploadPdfToGcs");
+
+      if (Array.isArray(poData)) {
+        poData.forEach((data) => {
+          if (templateType === "po") {
+            data.fileurl = uploadPdfToGcs.url;
+          } else if (templateType === "pr") {
+            data.prurl = uploadPdfToGcs.url;
+          } else if (templateType === "costestimation") {
+            data.estimationurl = uploadPdfToGcs.url;
+          }
+        });
+      } else {
+        if (templateType === "po") {
+          poData.fileurl = uploadPdfToGcs.url;
+        } else if (templateType === "pr") {
+          poData.prurl = uploadPdfToGcs.url;
+        } else if (templateType === "costestimation") {
+          poData.estimationurl = uploadPdfToGcs.url;
+        }
+      }
+      return { success: true, data: uploadPdfToGcs, poData };
     } catch (error) {
-      console.error("File upload service error:", error);
-      return { success: false, message: error.message };
+      console.error(
+        "Query Execution Error: IN generatepurchaseOrderData",
+        error
+      );
+      reply.status(500).send({ success: false, error: error.message });
     }
   },
 };

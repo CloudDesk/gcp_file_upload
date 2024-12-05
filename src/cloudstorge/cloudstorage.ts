@@ -900,7 +900,7 @@ const validateFileBuffer = (fileBuffer: Buffer): boolean => {
 export async function uploadFilesToGcs2(
   bucketName: string,
   filename: string,
-  file: any,
+  file: Buffer,
   foldername?: string
 ): Promise<{
   success: boolean;
@@ -911,19 +911,21 @@ export async function uploadFilesToGcs2(
 }> {
   return new Promise((resolve, reject) => {
     try {
-      const bucketexists = storage.bucket(bucketName).exists();
-      console.log(bucketexists, "bucketexists");
       const bucket = storage.bucket(bucketName);
       const folderPath = foldername
         ? `${foldername}/${filename}`
         : `${filename}`;
       console.log(folderPath, "folderPath");
       const blob = bucket.file(folderPath);
+
+      const fileExtension = filename.split(".").pop()?.toLowerCase();
+      const contentType = getContentType(fileExtension);
+
       const blobStream = blob.createWriteStream({
         resumable: false,
         gzip: true,
         metadata: {
-          contentType: file.mimetype,
+          contentType: contentType,
         },
       });
 
@@ -945,27 +947,7 @@ export async function uploadFilesToGcs2(
         });
       });
 
-      try {
-        const fileStream = createReadStream(file.path);
-
-        fileStream.on("error", (error) => {
-          console.error("File read error:", error);
-          resolve({
-            success: false,
-            message: "File read failed",
-            error: error.message,
-          });
-        });
-
-        fileStream.pipe(blobStream);
-      } catch (error: any) {
-        console.error("Error creating file stream:", error);
-        resolve({
-          success: false,
-          message: "File stream creation failed",
-          error: error.message,
-        });
-      }
+      blobStream.end(file);
     } catch (error: any) {
       console.error("Error uploading file:", error);
       resolve({

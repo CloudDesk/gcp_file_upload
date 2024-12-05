@@ -12,7 +12,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 console.log(__dirname, "DIRNAME");
 
-const uploadsDir = path.resolve(__dirname, "../../../uploads");
+const uploadsDir = path.resolve(__dirname, "../../uploads");
 console.log(uploadsDir, "uploadsDIR");
 
 const execAsync = util.promisify(exec);
@@ -93,21 +93,34 @@ const fileGeneration = async (data: any) => {
     fs.writeFileSync(docxFilePath, buf);
     console.log(data.id, "data id is");
     console.log(pdfFilePath, "pdf file path");
-    let result = await convertToPdf(docxFilePath, pdfFilePath, data.id);
+    let result = await convertToPdf(
+      docxFilePath,
+      pdfFilePath,
+      data.id,
+      data.ponumber
+    );
     return result;
   } catch (error: any) {
     return error.message;
   }
 };
 
-const convertToPdf = async (docxFilePath: any, pdfFilePath: any, id: any) => {
+const convertToPdf = async (
+  docxFilePath: any,
+  pdfFilePath: any,
+  id: any,
+  poNumber
+) => {
   try {
     let fileurl: String;
     const command = `soffice --headless --convert-to pdf "${docxFilePath}" --outdir "${uploadsDir}"`;
     const { stdout, stderr } = await execAsync(command);
     // console.log("PDF Generated Successfully", stdout);
     console.log(pdfFilePath, " PDF FILE PATH ");
-    var filename = pdfFilePath.replace(/^.*[\\/]/, "");
+    console.log(__dirname, "DIRNAME");
+    const relativeFilePath = path.resolve("uploads", pdfFilePath);
+    console.log(relativeFilePath, "relativeFilePath");
+    let filename = pdfFilePath.replace(/^.*[\\/]/, "");
     console.log(filename, "FILE NAME IS");
     // fileurl = returnResult.protocol + "s://" + returnResult.headers.host + '/' + filename
     console.log(PROTOCOL, "PROTOCOL IS DATA");
@@ -120,7 +133,7 @@ const convertToPdf = async (docxFilePath: any, pdfFilePath: any, id: any) => {
     console.log(id, fileurl, "eee");
     // uploadPDF("");
 
-    return { fileurl, id };
+    return { fileurl, relativeFilePath, id, poNumber, filename };
   } catch (error: any) {
     console.error("Error :", error);
   }

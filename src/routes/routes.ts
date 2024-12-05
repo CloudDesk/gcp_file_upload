@@ -113,7 +113,7 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
   );
 
   fastify.post(
-    "/upload-files",
+    "/generate-document/:templatetype",
     { preHandler: [filesUpload] },
     async (req, reply) => {
       try {
