@@ -5,8 +5,8 @@ import GenerateDocx from "../docxtemplate/docx.js";
 import { url } from "inspector";
 
 export const fileUploadService = {
-  uploadFile: async (request, poData, reply) => {
-    console.log(poData, "PODATA");
+  uploadFile: async (request, uploadData, reply) => {
+    console.log(uploadData, "PODATA");
     console.log(request.params, "Params");
     const templateType = request.params.templatetype;
     console.log(templateType, "templateType");
@@ -23,7 +23,7 @@ export const fileUploadService = {
         template = "costestimation/costestimation.docx";
         bucketname = "revo-cost-estimation";
       }
-      let result = await GenerateDocx(request, poData, template);
+      let result = await GenerateDocx(request, uploadData, template);
       console.log(result, "result from invoiceData");
       const fileBuffer = await fs.readFile(result.relativeFilePath);
       let uploadPdfToGcs = await uploadFilesToGcs2(
@@ -34,8 +34,8 @@ export const fileUploadService = {
       );
       console.log(uploadPdfToGcs, "uploadPdfToGcs");
 
-      if (Array.isArray(poData)) {
-        poData.forEach((data) => {
+      if (Array.isArray(uploadData)) {
+        uploadData.forEach((data) => {
           if (templateType === "po") {
             data.fileurl = uploadPdfToGcs.url;
           } else if (templateType === "pr") {
@@ -46,14 +46,14 @@ export const fileUploadService = {
         });
       } else {
         if (templateType === "po") {
-          poData.fileurl = uploadPdfToGcs.url;
+          uploadData.fileurl = uploadPdfToGcs.url;
         } else if (templateType === "pr") {
-          poData.prurl = uploadPdfToGcs.url;
+          uploadData.prurl = uploadPdfToGcs.url;
         } else if (templateType === "costestimation") {
-          poData.estimationurl = uploadPdfToGcs.url;
+          uploadData.estimationurl = uploadPdfToGcs.url;
         }
       }
-      return { success: true, data: uploadPdfToGcs, poData };
+      return { success: true, data: uploadPdfToGcs, uploadData };
     } catch (error) {
       console.error(
         "Query Execution Error: IN generatepurchaseOrderData",
