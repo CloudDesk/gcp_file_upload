@@ -8,6 +8,7 @@ import { filesUpload } from "../multer/multer.js";
 import { revoPoInvoiceController } from "../controller/revoPoInvoce.controller.js";
 import { revoPrQuotesController } from "../controller/revoPrQuotes.controller.js";
 import { revoTicketController } from "../controller/revoTicketController.js";
+import { fileUploadController } from "../controller/fileupload.controller.js";
 export const pdfroute = (fastify, opts, done) => {
     fastify.get("/", async (req, reply) => {
         return { hello: "world" };
@@ -82,7 +83,15 @@ export const pdfroute = (fastify, opts, done) => {
                 .send({ status: "fail", message: "File upload failed" });
         }
     });
+    fastify.post("/generate-document/:templatetype", { preHandler: [filesUpload] }, async (req, reply) => {
+        try {
+            let result = await fileUploadController.fileUpload(req, reply);
+            return result;
+        }
+        catch (error) {
+            return error;
+        }
+    });
     done();
 };
-//  fastify.post("/ratings/uploads",revoratingsuploadcontroller.revoratingupload);
 //# sourceMappingURL=routes.js.map

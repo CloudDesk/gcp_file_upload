@@ -4,6 +4,8 @@ import { REVO_PO_INVOICE_API } from "../utils/config.js";
 
 export const revoPoInvoiceService = {
   revoPoInvoiceService: async (request: any, reply: any) => {
+    let authHeader = request.headers.authorization;
+    console.log(authHeader, "authHeader is data in po invoice");
     console.log(request.body, "PROCESSED TEXT FIELDS");
     console.log(request.files.length, "REWQ FILES");
     const files = request.files;
@@ -30,7 +32,14 @@ export const revoPoInvoiceService = {
       }
       request.body.invoiceurl = invoiceurl[0];
       console.log(request.body, "request.body");
-      let insertPoInvoice = await axios.post(REVO_PO_INVOICE_API, request.body);
+      let insertPoInvoice = await axios.post(
+        REVO_PO_INVOICE_API, 
+        request.body,
+        {
+        headers: {
+          Authorization: authHeader 
+        }
+      });
       console.log(insertPoInvoice, "insertPoInvoice");
       return insertPoInvoice;
     } catch (error) {

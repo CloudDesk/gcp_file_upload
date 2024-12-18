@@ -76,7 +76,7 @@ const imageResize = async (request: any) => {
         }
       } catch (error) {
         console.error("Error reading file stream:", error);
-        throw new Error("Error reading file stream");
+        return {success:false,error:error.message || "Error reading file stream"};
       }
 
       const fileBuffer = Buffer.concat(chunks);
@@ -120,7 +120,7 @@ const imageResize = async (request: any) => {
         resizedImageUrls.push({ Small: smallUrl.url });
       } catch (error) {
         console.error("Error processing image:", error);
-        throw new Error("Error processing image");
+        return {success:false,error:error.message || "Error processing image"};
       }
     }
 
@@ -139,6 +139,7 @@ const imageResize = async (request: any) => {
   } catch (error) {
     console.error("Error in image resizing function:", error);
     return {
+      success:false,
       statusCode: 500,
       error: "Internal Server Error",
       message: error.message || "Error in Resizing Images",

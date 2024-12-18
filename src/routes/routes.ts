@@ -1,9 +1,6 @@
 import axios from "axios";
-import Multer from "fastify-multer";
 import { docgenController } from "../controller/docgen.controller.js";
-import imageResize from "../utils/imageresize.js";
 import {
-  REVO_PRODUCT_IMAGE_API,
   REVO_PRODUCT_RATING_API,
 } from "../utils/config.js";
 import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
@@ -52,80 +49,60 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
   });
 
   fastify.post("/product/images/:productid", revoimagecontroller.uploadimage);
-  fastify.post(
-    "/po/invoice",
-    { preHandler: [filesUpload] },
-    revoPoInvoiceController.revoPoInvoiceController
-  );
-  fastify.post(
-    "/pr/quotes",
-    { preHandler: [filesUpload] },
-    revoPrQuotesController.revoPrQuotesController
-  );
-  fastify.post(
-    "/tickets/images",
-    { preHandler: [filesUpload] },
-    revoTicketController.revoTicketController
-  );
+  fastify.post("/po/invoice", { preHandler: [filesUpload] }, revoPoInvoiceController.revoPoInvoiceController);
+  fastify.post("/pr/quotes", { preHandler: [filesUpload] }, revoPrQuotesController.revoPrQuotesController);
+  fastify.post("/tickets/images", { preHandler: [filesUpload] }, revoTicketController.revoTicketController);
 
   //Rating with image upload
-  fastify.post(
-    "/uploadrating/images",
-    { preHandler: [filesUpload] },
-    async (req, reply) => {
-      console.log(req.body, "PROCESSED TEXT FIELDS");
-      console.log(req.files.length, "REWQ FILES");
-      const files = req.files;
-      console.log(files);
-      try {
-        let data: any;
-        if (files.length > 0) {
-          if (!req.body.productid) {
-            reply.status(400).send("Product id is missing");
-          }
+  fastify.post("/uploadrating/images", { preHandler: [filesUpload] }, async (req, reply) => {
+    console.log(req.body, "PROCESSED TEXT FIELDS");
+    console.log(req.files.length, "REWQ FILES");
+    const files = req.files;
+    console.log(files);
+    try {
+      let data: any;
+      if (files.length > 0) {
+        if (!req.body.productid) {
+          reply.status(400).send("Product id is missing");
+        }
 
-          data = await uploadRevoFiles(
-            files,
-            "revo_ratings_images",
-            req.body.productid
-          );
-          console.log(data, "data from cloud storage");
-        }
-        let ratingurl = [];
-        if (data.success && data.files.length > 0) {
-          data.files.forEach((file: any) => {
-            ratingurl.push(file.url);
-          });
-        }
-        req.body.url = ratingurl;
-        let insertrating = await axios.post(REVO_PRODUCT_RATING_API, req.body);
-        console.log(insertrating, "insertrating");
-        if (insertrating.data) {
-          reply.send(insertrating.data);
-        }
-      } catch (error) {
-        console.error("Error uploading files:", error);
-        reply
-          .status(500)
-          .send({ status: "fail", message: "File upload failed" });
+        data = await uploadRevoFiles(
+          files,
+          "revo_ratings_images",
+          req.body.productid
+        );
+        console.log(data, "data from cloud storage");
       }
+      let ratingurl = [];
+      if (data.success && data.files.length > 0) {
+        data.files.forEach((file: any) => {
+          ratingurl.push(file.url);
+        });
+      }
+      req.body.url = ratingurl;
+      let insertrating = await axios.post(REVO_PRODUCT_RATING_API, req.body);
+      console.log(insertrating, "insertrating");
+      if (insertrating.data) {
+        reply.send(insertrating.data);
+      }
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      reply
+        .status(500)
+        .send({ status: "fail", message: "File upload failed" });
     }
+  }
   );
 
-  fastify.post(
-    "/generate-document/:templatetype",
-    { preHandler: [filesUpload] },
-    async (req, reply) => {
-      try {
-        let result = await fileUploadController.fileUpload(req, reply);
-        return result;
-      } catch (error) {
-        return error;
-      }
+  fastify.post("/generate-document/:templatetype", { preHandler: [filesUpload] }, async (req, reply) => {
+    try {
+      let result = await fileUploadController.fileUpload(req, reply);
+      return result;
+    } catch (error) {
+      return error;
     }
+  }
   );
 
   done();
 };
-
-//  fastify.post("/ratings/uploads",revoratingsuploadcontroller.revoratingupload);

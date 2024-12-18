@@ -6,7 +6,7 @@ import { url } from "inspector";
 
 export const fileUploadService = {
   uploadFile: async (request, uploadData, reply) => {
-    console.log(uploadData, "PODATA");
+    console.log(uploadData, "DATA IS");
     console.log(request.params, "Params");
     const templateType = request.params.templatetype;
     console.log(templateType, "templateType");
@@ -22,6 +22,14 @@ export const fileUploadService = {
       } else if (templateType === "costestimation") {
         template = "costestimation/costestimation.docx";
         bucketname = "revo-cost-estimation";
+      }
+      else if (templateType === "productinvoice") {
+        template = "invoice/revoinvoiceproduct.docx";
+        bucketname = " revo_product_invoice";
+      }
+      else if (templateType === "serviceinvoice") {
+        template = "invoice/revoinvoiceservice.docx";
+        bucketname = "revo_service_invoice";
       }
       let result = await GenerateDocx(request, uploadData, template);
       console.log(result, "result from invoiceData");
@@ -43,6 +51,12 @@ export const fileUploadService = {
           } else if (templateType === "costestimation") {
             data.estimationurl = uploadPdfToGcs.url;
           }
+          else if (templateType === "productinvoice") {
+            data.invoiceUrl = uploadPdfToGcs.url;
+          }
+          else if (templateType === "serviceinvoice") {
+            data.invoiceUrl = uploadPdfToGcs.url;
+          }
         });
       } else {
         if (templateType === "po") {
@@ -51,6 +65,12 @@ export const fileUploadService = {
           uploadData.prurl = uploadPdfToGcs.url;
         } else if (templateType === "costestimation") {
           uploadData.estimationurl = uploadPdfToGcs.url;
+        }
+        else if (templateType === "productinvoice") {
+          uploadData.invoiceUrl = uploadPdfToGcs.url;
+        }
+        else if (templateType === "serviceinvoice") {
+          uploadData.invoiceUrl = uploadPdfToGcs.url;
         }
       }
       return { success: true, data: uploadPdfToGcs, uploadData };
