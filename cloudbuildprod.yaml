@@ -14,14 +14,14 @@ steps:
     args:
       - 'build'
       - '-t'
-      - 'revo-container/revo-prod-445604/revo-fileupload-prodenv:latest'
+      - 'gcr.io/revo-prod-445604/revo-fileupload-prodenv:latest'
       - '.'
 
   # Step 4: Push the Docker image to Google Container Registry
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'push'
-      - 'revo-container/revo-prod-445604/revo-fileupload-prodenv:latest'
+      - 'gcr.io/revo-prod-445604/revo-fileupload-prodenv:latest'
 
   # Step 5: Deploy the image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -31,7 +31,7 @@ steps:
       - 'deploy'
       - 'revo-file-upload'
       - '--image'
-      - 'revo-container/revo-prod-445604/revo-fileupload-prodenv:latest'
+      - 'gcr.io/revo-prod-445604/revo-fileupload-prodenv:latest'
       - '--region'
       - 'us-central1'
       - '--platform'
