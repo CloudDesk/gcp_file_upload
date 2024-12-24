@@ -1,6 +1,6 @@
 import axios from "axios";
 import { docgenController } from "../controller/docgen.controller.js";
-import { REVO_PRODUCT_RATING_API, } from "../utils/config.js";
+import { REVO_PRODUCT_RATING_API, REVO_RATINGS_IMAGES_BUCKET, } from "../utils/config.js";
 import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
 // import { revoratingsuploadcontroller } from "../controller/revoratinguploads.controller.js";
 import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
@@ -60,7 +60,7 @@ export const pdfroute = (fastify, opts, done) => {
                 if (!req.body.productid) {
                     reply.status(400).send("Product id is missing");
                 }
-                data = await uploadRevoFiles(files, "revo_ratings_images", req.body.productid);
+                data = await uploadRevoFiles(files, REVO_RATINGS_IMAGES_BUCKET, req.body.productid);
                 console.log(data, "data from cloud storage");
             }
             let ratingurl = [];

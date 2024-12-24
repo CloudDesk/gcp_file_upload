@@ -1,6 +1,6 @@
 import axios from "axios";
 import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
-import { REVO_PO_INVOICE_API } from "../utils/config.js";
+import { REVO_PO_INVOICE_API, REVO_PO_INVOICE_BUCKET } from "../utils/config.js";
 
 export const revoPoInvoiceService = {
   revoPoInvoiceService: async (request: any, reply: any) => {
@@ -19,7 +19,7 @@ export const revoPoInvoiceService = {
 
         data = await uploadRevoFiles(
           files,
-          "revo_poinvoice",
+          REVO_PO_INVOICE_BUCKET,
           request.body.ponumber
         );
         console.log(data, "data from cloud storage");

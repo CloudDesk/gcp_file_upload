@@ -1,6 +1,6 @@
 import axios from "axios";
 import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
-import { REVO_TICKETS_IMAGES_API } from "../utils/config.js";
+import { REVO_TICKET_IMAGES_BUCKET, REVO_TICKETS_IMAGES_API } from "../utils/config.js";
 export const revoTicketService = {
     revoTicketService: async (request, reply) => {
         try {
@@ -14,7 +14,7 @@ export const revoTicketService = {
                     if (!request.body.userid) {
                         reply.status(400).send("userid  is missing");
                     }
-                    data = await uploadRevoFiles(files, "revo_ticket_images", `userId - ${request.body.userid}`);
+                    data = await uploadRevoFiles(files, REVO_TICKET_IMAGES_BUCKET, `userId - ${request.body.userid}`);
                     console.log(data, 'data from cloud storage');
                 }
                 let ticketimagesurl = [];

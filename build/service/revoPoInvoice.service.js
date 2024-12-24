@@ -1,6 +1,6 @@
 import axios from "axios";
 import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
-import { REVO_PO_INVOICE_API } from "../utils/config.js";
+import { REVO_PO_INVOICE_API, REVO_PO_INVOICE_BUCKET } from "../utils/config.js";
 export const revoPoInvoiceService = {
     revoPoInvoiceService: async (request, reply) => {
         let authHeader = request.headers.authorization;
@@ -15,7 +15,7 @@ export const revoPoInvoiceService = {
                 if (!request.body.ponumber) {
                     reply.status(400).send("ponumber  is missing");
                 }
-                data = await uploadRevoFiles(files, "revo_poinvoice", request.body.ponumber);
+                data = await uploadRevoFiles(files, REVO_PO_INVOICE_BUCKET, request.body.ponumber);
                 console.log(data, "data from cloud storage");
             }
             let invoiceurl = [];

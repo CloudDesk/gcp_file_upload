@@ -2,6 +2,7 @@ import axios from "axios";
 import { docgenController } from "../controller/docgen.controller.js";
 import {
   REVO_PRODUCT_RATING_API,
+  REVO_RATINGS_IMAGES_BUCKET,
 } from "../utils/config.js";
 import { revoimagecontroller } from "../controller/revoproductimage.controller.js";
 // import { revoratingsuploadcontroller } from "../controller/revoratinguploads.controller.js";
@@ -68,7 +69,7 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
 
         data = await uploadRevoFiles(
           files,
-          "revo_ratings_images",
+          REVO_RATINGS_IMAGES_BUCKET,
           req.body.productid
         );
         console.log(data, "data from cloud storage");

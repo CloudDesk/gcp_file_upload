@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx.js";
+import { REVO_COST_ESTIMATION_BUCKET, REVO_PO_BUCKET, REVO_PR_BUCKET, REVO_PRODUCT_INVOICE_BUCKET, REVO_SERVICE_INVOICE_BUCKET } from "../utils/config.js";
 export const fileUploadService = {
     uploadFile: async (request, uploadData, reply) => {
         console.log(uploadData, "DATA IS");
@@ -12,23 +13,28 @@ export const fileUploadService = {
         try {
             if (templateType === "po") {
                 template = "po/Revo-PO new 1.docx";
-                bucketname = "revo-po";
+                // bucketname = "revo-po";
+                bucketname = REVO_PO_BUCKET;
             }
             else if (templateType === "pr") {
                 template = "pr/Revo-PR.docx";
-                bucketname = "revo-pr";
+                // bucketname = "revo-pr";
+                bucketname = REVO_PR_BUCKET;
             }
             else if (templateType === "costestimation") {
                 template = "costestimation/costestimation.docx";
-                bucketname = "revo-cost-estimation";
+                // bucketname = "revo-cost-estimation";
+                bucketname = REVO_COST_ESTIMATION_BUCKET;
             }
             else if (templateType === "productinvoice") {
                 template = "invoice/revoinvoiceproduct.docx";
-                bucketname = " revo_product_invoice";
+                // bucketname = "revo_product_invoice";
+                bucketname = REVO_PRODUCT_INVOICE_BUCKET;
             }
             else if (templateType === "serviceinvoice") {
                 template = "invoice/revoinvoiceservice.docx";
-                bucketname = "revo_service_invoice";
+                // bucketname = "revo_service_invoice";
+                bucketname = REVO_SERVICE_INVOICE_BUCKET;
             }
             let result = await GenerateDocx(request, uploadData, template);
             console.log(result, "result from invoiceData");
@@ -47,10 +53,10 @@ export const fileUploadService = {
                         data.estimationurl = uploadPdfToGcs.url;
                     }
                     else if (templateType === "productinvoice") {
-                        data.invoiceUrl = uploadPdfToGcs.url;
+                        data.invoiceurl = uploadPdfToGcs.url;
                     }
                     else if (templateType === "serviceinvoice") {
-                        data.invoiceUrl = uploadPdfToGcs.url;
+                        data.invoiceurl = uploadPdfToGcs.url;
                     }
                 });
             }
@@ -65,10 +71,11 @@ export const fileUploadService = {
                     uploadData.estimationurl = uploadPdfToGcs.url;
                 }
                 else if (templateType === "productinvoice") {
-                    uploadData.invoiceUrl = uploadPdfToGcs.url;
+                    console.log('test');
+                    uploadData.invoiceurl = uploadPdfToGcs.url;
                 }
                 else if (templateType === "serviceinvoice") {
-                    uploadData.invoiceUrl = uploadPdfToGcs.url;
+                    uploadData.invoiceurl = uploadPdfToGcs.url;
                 }
             }
             return { success: true, data: uploadPdfToGcs, uploadData };

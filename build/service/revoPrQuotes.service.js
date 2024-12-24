@@ -13,7 +13,7 @@ export const revoPrQuotesService = {
                 if (!request.body.prnumber) {
                     reply.status(400).send("prnumber  is missing");
                 }
-                data = await uploadRevoFiles(files, "revo_pr_quotes", request.body.prnumber);
+                data = await uploadRevoFiles(files, REVO_PR_QUOTES_API, request.body.prnumber);
                 console.log(data, 'data from cloud storage');
             }
             let prquotesurl = [];
