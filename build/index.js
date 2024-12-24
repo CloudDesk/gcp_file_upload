@@ -10,8 +10,6 @@ import { pdfroute } from "./routes/routes.js";
 const fastify = Fastify({
     logger: false, // Enable logging for debugging
 });
-// ... other imports and configurations ...
-// Register CORS with specific options
 await fastify.register(cors, {
     origin: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -23,18 +21,6 @@ await fastify.register(cors, {
 fastify.register(formbody);
 fastify.register(fastifyCookie);
 fastify.register(fastifyMultipart);
-// fastify.register(fastifyMultipart, {
-//   limits: {
-//     fieldNameSize: 100,
-//     fieldSize: 100,
-//     fields: 10,
-//     fileSize: 1000000,
-//     files: 10,
-//     headerPairs: 2000,
-//     parts: 1000,
-//   },
-// });
-//fastify.register(formidable);
 fastify.register(pdfroute, { fastifyInstance: fastify });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
