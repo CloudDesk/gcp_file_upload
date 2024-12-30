@@ -3,7 +3,6 @@ export var docgenController;
 (function (docgenController) {
     docgenController.insertfileconversiondocgendta = async (req, reply) => {
         try {
-            console.log("test");
             let inserstpdf = await docgenService.insertfileconversiondocgendata(req, reply);
             return inserstpdf;
         }
@@ -13,7 +12,6 @@ export var docgenController;
     };
     docgenController.insertfileupload = async (req, reply) => {
         try {
-            console.log("test");
             let inserstpdf = await docgenService.insertfileupload(req, reply);
             return inserstpdf;
         }
@@ -23,9 +21,7 @@ export var docgenController;
     };
     docgenController.getFiles = async (req, reply) => {
         try {
-            console.log("test");
             let inserstpdf = await docgenService.getFiles(req, reply);
-            console.log(inserstpdf, "inserstpdf");
             return inserstpdf;
         }
         catch (error) {

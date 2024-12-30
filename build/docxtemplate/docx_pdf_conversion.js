@@ -72,7 +72,6 @@ const convertToPdf = async (docxBuffer, pdfFilename, id) => {
         const pdfPath = tempDocxPath.replace(".docx", ".pdf");
         const pdfBuffer = fs.readFileSync(pdfPath);
         const pdfFile = storage.bucket(bucketName).file(pdfFilename);
-        console.log(pdfFile, "pdf file");
         await pdfFile.save(pdfBuffer, {
             resumable: false,
             contentType: "application/pdf",

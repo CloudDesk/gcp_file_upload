@@ -23,7 +23,6 @@ export const pdfroute = (fastify, opts, done) => {
         }
     });
     fastify.post("/file-upload/:organisation", async (req, reply) => {
-        console.log(req, "req from file upload");
         try {
             let data = await docgenController.insertfileupload(req, reply);
             console.log(data, "data from file upload");
@@ -34,7 +33,6 @@ export const pdfroute = (fastify, opts, done) => {
         }
     });
     fastify.get("/get-files/:organisation", async (req, reply) => {
-        console.log(req, "req from file upload");
         try {
             let data = await docgenController.getFiles(req, reply);
             console.log(data, "data from file upload");
@@ -53,7 +51,6 @@ export const pdfroute = (fastify, opts, done) => {
         console.log(req.body, "PROCESSED TEXT FIELDS");
         console.log(req.files.length, "REWQ FILES");
         const files = req.files;
-        console.log(files);
         try {
             let data;
             if (files.length > 0) {
@@ -61,7 +58,6 @@ export const pdfroute = (fastify, opts, done) => {
                     reply.status(400).send("Product id is missing");
                 }
                 data = await uploadRevoFiles(files, REVO_RATINGS_IMAGES_BUCKET, req.body.productid);
-                console.log(data, "data from cloud storage");
             }
             let ratingurl = [];
             if (data.success && data.files.length > 0) {

@@ -3,19 +3,14 @@ import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
 import { REVO_PR_QUOTES_API, REVO_PR_QUOTES_BUCKET } from "../utils/config.js";
 export const revoPrQuotesService = {
     revoPrQuotesService: async (request, reply) => {
-        console.log(request.body, "PROCESSED TEXT FIELDS");
-        console.log(request.files.length, "REWQ FILES");
         const files = request.files;
-        console.log(files);
         try {
             let data;
             if (files.length > 0) {
                 if (!request.body.prnumber) {
                     reply.status(400).send("prnumber  is missing");
                 }
-                console.log(REVO_PR_QUOTES_BUCKET, 'Bucket Name');
                 data = await uploadRevoFiles(files, REVO_PR_QUOTES_BUCKET, request.body.prnumber);
-                console.log(data, 'data from cloud storage');
             }
             let prquotesurl = [];
             if (data.success && data.files.length > 0) {
@@ -24,10 +19,7 @@ export const revoPrQuotesService = {
                 });
             }
             request.body.quoteurl = prquotesurl[0];
-            console.log(request.body, 'request.body');
-            console.log(REVO_PR_QUOTES_API);
             let insertPrQuotes = await axios.post(REVO_PR_QUOTES_API, request.body);
-            console.log(insertPrQuotes, 'insertPrQuotes');
             return insertPrQuotes;
         }
         catch (error) {
