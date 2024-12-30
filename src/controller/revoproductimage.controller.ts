@@ -3,6 +3,7 @@ import { revoimageservice } from "../service/revoproductimage.service.js";
 export const revoimagecontroller = {
   uploadimage: async (request: any, reply: any) => {
     try {
+      console.log('uploadimage controller');
       let uploadimageresult = await revoimageservice.uploadimage(
         request,
         reply
