@@ -31,9 +31,7 @@ fastify.register(pdfroute, { fastifyInstance: fastify });
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const parentDir = resolve(__dirname, "..");
-
-console.log(join(parentDir, "/uploads"), "INDEX PATH");
-console.log(parentDir, "INDEX PATH 2");
+;
 
 fastify.register(fastifyStatic, {
   root: join(parentDir, "/uploads"),

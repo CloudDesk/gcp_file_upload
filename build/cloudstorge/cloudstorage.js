@@ -17,7 +17,6 @@ export async function uploadPDF(filePath) {
                 contentType: "application/pdf",
             },
         });
-        console.log(`File ${fileName} uploaded to ${bucketName} successfully.`);
     }
     catch (error) {
         console.error("Error uploading file:", error);
@@ -26,10 +25,7 @@ export async function uploadPDF(filePath) {
 export async function uploadDynamicFiles(filePath, bucketnamedata) {
     try {
         const filename = path.basename(filePath);
-        console.log(filename, "filename is");
         const fileExtension = filename.split(".").pop()?.toLowerCase();
-        console.log(fileExtension, "fileExtension");
-        console.log(bucketnamedata, "bucketnamedata");
         const contentType = getContentType(fileExtension);
         await storage.bucket(bucketnamedata).upload(filePath, {
             destination: filename,
@@ -37,7 +33,6 @@ export async function uploadDynamicFiles(filePath, bucketnamedata) {
                 contentType: contentType,
             },
         });
-        console.log(`File ${filename} uploaded to ${bucketnamedata} successfully.`);
     }
     catch (error) {
         console.error("Error uploading file:", error);
@@ -129,7 +124,6 @@ export async function uploadFile(filename, file, size, productId, organisation) 
             const folderPath = productId
                 ? `${productId}/${size}/${filename}`
                 : `${size}/${filename}`;
-            console.log(folderPath, "folderPath");
             const blob = bucket.file(folderPath);
             const fileExtension = filename.split(".").pop()?.toLowerCase();
             const contentType = getContentType(fileExtension);
@@ -185,7 +179,6 @@ export async function uploadProductImage(filename, file, size, productId, organi
             const folderPath = productId
                 ? `${productId}/${size}/${filename}`
                 : `${size}/${filename}`;
-            console.log(folderPath, "folderPath");
             const blob = bucket.file(folderPath);
             const fileExtension = filename.split(".").pop()?.toLowerCase();
             const contentType = getContentType(fileExtension);
@@ -240,7 +233,6 @@ export async function uploadPoInvoice(bucketName, filename, file, foldername) {
             const folderPath = foldername
                 ? `${foldername}/${filename}`
                 : `${filename}`;
-            console.log(folderPath, "folderPath");
             const blob = bucket.file(folderPath);
             const fileExtension = filename.split(".").pop()?.toLowerCase();
             const contentType = getContentType(fileExtension);
@@ -301,7 +293,6 @@ export async function uploadFileToGcp(filename, file, organisation) {
                     location: "US",
                     storageClass: "STANDARD",
                 });
-                console.log(`Bucket ${bucketName} created.`);
             }
             else {
                 bucket = storage.bucket(bucketName);

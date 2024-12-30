@@ -5,10 +5,8 @@ import { REVO_TICKET_IMAGES_BUCKET, REVO_TICKETS_IMAGES_API } from "../utils/con
 export const revoTicketService = {
     revoTicketService: async (request: any, reply: any) => {
         try {
-            console.log(request.body, "PROCESSED TEXT FIELDS");
-            console.log(request.files.length, "REWQ FILES");
+        
             const files = request.files;
-            console.log(files);
             try {
                 let data: any
                 if (files.length > 0) {
@@ -16,7 +14,6 @@ export const revoTicketService = {
                         reply.status(400).send("userid  is missing");
                     }
                     data = await uploadRevoFiles(files,REVO_TICKET_IMAGES_BUCKET, `userId - ${request.body.userid}`);
-                    console.log(data, 'data from cloud storage');
                 }
                 let ticketimagesurl = []
                 if (data.success && data.files.length > 0) {
@@ -26,10 +23,7 @@ export const revoTicketService = {
                     )
                 }
                 request.body.recipturl = ticketimagesurl[0]
-                console.log(request.body, 'request.body');
-                console.log(REVO_TICKETS_IMAGES_API);
                 let insertTicketImages = await axios.post(REVO_TICKETS_IMAGES_API, request.body)
-                console.log(insertTicketImages, 'insertTicketImages');
                 return insertTicketImages
             } catch (error) {
                 console.error("Error uploading files:", error);

@@ -23,6 +23,15 @@ export const fileUploadService = {
             }
             else if (templateType === "costestimation") {
                 template = "costestimation/costestimation.docx";
+                uploadData.forEach((e) => {
+                    if (e.productdata) {
+                        e.productdata = JSON.parse(e.productdata);
+                    }
+                    if (e.servicedata) {
+                        e.servicedata = JSON.parse(e.servicedata);
+                    }
+                });
+                console.log(uploadData, "uploadData aFTER PARSE");
                 // bucketname = "revo-cost-estimation";
                 bucketname = REVO_COST_ESTIMATION_BUCKET;
             }
@@ -40,7 +49,6 @@ export const fileUploadService = {
             console.log(result, "result from invoiceData");
             const fileBuffer = await fs.readFile(result.relativeFilePath);
             let uploadPdfToGcs = await uploadFilesToGcs2(bucketname, result.filename, fileBuffer, result.poNumber);
-            console.log(uploadPdfToGcs, "uploadPdfToGcs");
             if (Array.isArray(uploadData)) {
                 uploadData.forEach((data) => {
                     if (templateType === "po") {
@@ -71,7 +79,6 @@ export const fileUploadService = {
                     uploadData.estimationurl = uploadPdfToGcs.url;
                 }
                 else if (templateType === "productinvoice") {
-                    console.log('test');
                     uploadData.invoiceurl = uploadPdfToGcs.url;
                 }
                 else if (templateType === "serviceinvoice") {

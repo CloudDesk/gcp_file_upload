@@ -9,7 +9,6 @@ export var docgenService;
             let data = req.body;
             let template = "src/template/Revo-PO new 1.docx";
             let docxresult = await GenerateDocx(req, data, template);
-            console.log(docxresult, "docxresult");
             reply.send(docxresult.fileUrl);
         }
         catch (error) {
@@ -18,16 +17,11 @@ export var docgenService;
     };
     docgenService.insertfileupload = async (req, reply) => {
         try {
-            console.log("test");
-            console.log(req.params, "req params from file upload");
-            console.log(req.params.organisation, "req.params.organisation");
             let organisation = req.params.organisation;
             let filesdata = await req.file();
             const { file, filename } = filesdata;
             let uploadfile = await uploadFileToGcp(filename, file, organisation);
             reply.send(uploadfile);
-            // console.log(file, "file");
-            // console.log(filename, "filename");
         }
         catch (error) {
             return error;
@@ -39,9 +33,6 @@ export var docgenService;
             let uploadfile = await getBucketFiles(organisation);
             console.log(uploadfile, "uploadfile");
             return uploadfile.files;
-            // reply.send(uploadfile);
-            // console.log(file, "file");
-            // console.log(filename, "filename");
         }
         catch (error) {
             return error;
