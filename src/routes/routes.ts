@@ -55,6 +55,7 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
   fastify.post("/tickets/images", { preHandler: [filesUpload] }, revoTicketController.revoTicketController);
 
   //Rating with image upload
+  //Rating with image upload
   fastify.post("/uploadrating/images", { preHandler: [filesUpload] }, async (req, reply) => {
     console.log(req.body, "PROCESSED TEXT FIELDS");
     console.log(req.files.length, "REWQ FILES");
