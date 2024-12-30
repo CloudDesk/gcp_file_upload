@@ -28,7 +28,6 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
     }
   });
   fastify.post("/file-upload/:organisation", async (req: any, reply: any) => {
-    console.log(req, "req from file upload");
     try {
       let data = await docgenController.insertfileupload(req, reply);
       console.log(data, "data from file upload");
@@ -39,7 +38,6 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
   });
 
   fastify.get("/get-files/:organisation", async (req: any, reply: any) => {
-    console.log(req, "req from file upload");
     try {
       let data = await docgenController.getFiles(req, reply);
       console.log(data, "data from file upload");
@@ -59,7 +57,6 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
     console.log(req.body, "PROCESSED TEXT FIELDS");
     console.log(req.files.length, "REWQ FILES");
     const files = req.files;
-    console.log(files);
     try {
       let data: any;
       if (files.length > 0) {
@@ -72,7 +69,6 @@ export const pdfroute = (fastify: any, opts: any, done: any) => {
           REVO_RATINGS_IMAGES_BUCKET,
           req.body.productid
         );
-        console.log(data, "data from cloud storage");
       }
       let ratingurl = [];
       if (data.success && data.files.length > 0) {

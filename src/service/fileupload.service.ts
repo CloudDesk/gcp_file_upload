@@ -22,7 +22,6 @@ export const fileUploadService = {
         bucketname = REVO_PR_BUCKET;
       } else if (templateType === "costestimation") {
         template = "costestimation/costestimation.docx";
-        console.log(uploadData, "uploadData BEFORE PARSE");
         uploadData.forEach((e) => {
           if (e.productdata) {
             e.productdata = JSON.parse(e.productdata);
@@ -54,8 +53,6 @@ export const fileUploadService = {
         fileBuffer,
         result.poNumber
       );
-      console.log(uploadPdfToGcs, "uploadPdfToGcs");
-
       if (Array.isArray(uploadData)) {
         uploadData.forEach((data) => {
           if (templateType === "po") {
@@ -81,7 +78,6 @@ export const fileUploadService = {
           uploadData.estimationurl = uploadPdfToGcs.url;
         }
         else if (templateType === "productinvoice") {
-          console.log('test')
           uploadData.invoiceurl = uploadPdfToGcs.url;
         }
         else if (templateType === "serviceinvoice") {

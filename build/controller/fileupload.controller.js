@@ -62,6 +62,14 @@ export const fileUploadController = {
             }
             else if (uploadResult.success && templateType === "costestimation") {
                 request.body = uploadResult.uploadData;
+                request.body.forEach((e) => {
+                    if (e.productdata) {
+                        e.productdata = JSON.stringify(e.productdata);
+                    }
+                    if (e.servicedata) {
+                        e.servicedata = JSON.stringify(e.servicedata);
+                    }
+                });
                 console.log(request.body, "request.body COSTESTIMATION");
                 console.log(REVO_COST_ESTIMATTION_GENERATE_API + " REVO_COST_ESTIMATTION_GENERATE_API");
                 console.log(authHeader + " authHeader in cost Estimation Inboice");

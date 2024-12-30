@@ -10,10 +10,8 @@ import { uploadPDF } from "../cloudstorge/cloudstorage.js";
 const PROTOCOL = "http";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-console.log(__dirname, "DIRNAME");
 
 const uploadsDir = path.resolve(__dirname, "../../uploads");
-console.log(uploadsDir, "uploadsDIR");
 
 const execAsync = util.promisify(exec);
 let returnResult: any;
@@ -21,7 +19,6 @@ let globaltemplate: any;
 const GenerateDocx = async (request: any, data: any, template: any) => {
   try {
     globaltemplate = template;
-    console.log(globaltemplate, "global template");
     returnResult = request;
     for (const e of data) {
       let finalOutput = await fileGeneration(e);
@@ -35,16 +32,12 @@ const GenerateDocx = async (request: any, data: any, template: any) => {
 const fileGeneration = async (data: any) => {
   try {
     const currentEpochTimeInSeconds = Math.floor(Date.now() / 1000);
-    // console.log(data.id, "File Generation data");
     const content = fs.readFileSync(
-      // path.resolve("po/REVO 365Attach Invoice 1.docx"),
-      // path.resolve("po/Revo-PO.docx"),
       path.resolve(globaltemplate),
       "binary"
     );
 
     const zip = new PizZip(content);
-    // console.log(zip, "zip");
     const doc = new Docxtemplater(zip, {
       paragraphLoop: true,
       linebreaks: true,
@@ -88,11 +81,8 @@ const fileGeneration = async (data: any) => {
       }.docx`
     );
 
-    // console.log(docxFilePath, "docxfilepath");
-
     fs.writeFileSync(docxFilePath, buf);
-    console.log(data.id, "data id is");
-    console.log(pdfFilePath, "pdf file path");
+
     let result = await convertToPdf(
       docxFilePath,
       pdfFilePath,
@@ -115,23 +105,15 @@ const convertToPdf = async (
     let fileurl: String;
     const command = `soffice --headless --convert-to pdf "${docxFilePath}" --outdir "${uploadsDir}"`;
     const { stdout, stderr } = await execAsync(command);
-    // console.log("PDF Generated Successfully", stdout);
-    console.log(pdfFilePath, " PDF FILE PATH ");
-    console.log(__dirname, "DIRNAME");
+
     const relativeFilePath = path.resolve("uploads", pdfFilePath);
-    console.log(relativeFilePath, "relativeFilePath");
     let filename = pdfFilePath.replace(/^.*[\\/]/, "");
-    console.log(filename, "FILE NAME IS");
     // fileurl = returnResult.protocol + "s://" + returnResult.headers.host + '/' + filename
-    console.log(PROTOCOL, "PROTOCOL IS DATA");
     fileurl = PROTOCOL + "://" + returnResult.headers.host + "/" + filename;
     if (stderr) {
-      console.log("Stderr", stderr);
       return stderr;
     }
-    // console.log(fileurl,'-- file URL');
-    console.log(id, fileurl, "eee");
-    // uploadPDF("");
+
 
     return { fileurl, relativeFilePath, id, poNumber, filename };
   } catch (error: any) {
