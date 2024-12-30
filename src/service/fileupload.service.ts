@@ -22,6 +22,14 @@ export const fileUploadService = {
         bucketname = REVO_PR_BUCKET;
       } else if (templateType === "costestimation") {
         template = "costestimation/costestimation.docx";
+
+        if (uploadData.productdata) {
+          uploadData.productdata = JSON.parse(uploadData.productdata);
+      }
+      if (uploadData.servicedata) {
+          uploadData.servicedata = JSON.parse(uploadData.servicedata);
+      }
+ 
         // bucketname = "revo-cost-estimation";
         bucketname = REVO_COST_ESTIMATION_BUCKET;
       }
