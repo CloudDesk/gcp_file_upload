@@ -7,9 +7,9 @@
     "dev": "npx tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "docgen-build": "docker build -t clouddesk_file_upload .",
-    "docgen-tag": "docker tag clouddesk_file_upload gcr.io/docblitz-437213/clouddesk_file_upload",
-    "docgen-push": "docker push gcr.io/docblitz-437213/clouddesk_file_upload",
+    "revo-build": "docker build -t clouddesk_file_upload .",
+    "revo-tag": "docker tag clouddesk_file_upload gcr.io/docblitz-437213/clouddesk_file_upload",
+    "revo-push": "docker push gcr.io/docblitz-437213/clouddesk_file_upload",
     "gcp-deploy": "gcloud run deploy clouddesk-file-upload --image gcr.io/docblitz-437213/docgen:latest --platform managed --region us-central1 --allow-unauthenticated --port 4500"
   },
   "author": "",
