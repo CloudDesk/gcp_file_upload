@@ -12,7 +12,7 @@ export const revoPoInvoiceService = {
                     reply.status(400).send("ponumber  is missing");
                 }
                 data = await uploadRevoFiles(files, REVO_PO_INVOICE_BUCKET, request.body.ponumber);
-                console.log(data, "data from cloud storage");
+                console.log(data, "data from cloud storages");
             }
             let invoiceurl = [];
             if (data.success && data.files.length > 0) {
