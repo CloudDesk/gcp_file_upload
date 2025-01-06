@@ -30,6 +30,7 @@ export const fileUploadService = {
                     if (e.servicedata) {
                         e.servicedata = JSON.parse(e.servicedata);
                     }
+                    e.estimationdate = new Date().toLocaleDateString();
                 });
                 console.log(uploadData, "uploadData aFTER PARSE");
                 // bucketname = "revo-cost-estimation";

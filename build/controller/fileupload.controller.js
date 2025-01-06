@@ -1,11 +1,11 @@
 import axios from "axios";
 import { fileUploadService } from "../service/fileupload.service.js";
-import { REVO_COST_ESTIMATTION_GENERATE_API, REVO_INVOICE_GENERATE_API, REVO_PO_GENERATE_API, REVO_PR_GENERATE_API } from "../utils/config.js";
+import { REVO_COST_ESTIMATTION_GENERATE_API, REVO_INVOICE_GENERATE_API, REVO_PO_GENERATE_API, REVO_PR_GENERATE_API, } from "../utils/config.js";
 export const fileUploadController = {
     fileUpload: async (request, reply) => {
         const templateType = request.params.templatetype;
         let authHeader = request.headers.authorization;
-        console.log(authHeader, 'authHeader is data ');
+        console.log(authHeader, "authHeader is data ");
         console.log(templateType, "templateType");
         try {
             let uploadResult = await fileUploadService.uploadFile(request, request.body, reply);
@@ -19,13 +19,13 @@ export const fileUploadController = {
                 try {
                     let updatedResult = await axios.post(REVO_PO_GENERATE_API, request.body[0], {
                         headers: {
-                            Authorization: authHeader
-                        }
+                            Authorization: authHeader,
+                        },
                     });
                     reply.send(updatedResult.data.Data.fileurl);
                 }
                 catch (error) {
-                    console.log(error, 'ERROR IN FILE UPLOAD PO ');
+                    console.log(error, "ERROR IN FILE UPLOAD PO ");
                     reply.status(404).send(error.message);
                 }
             }
@@ -37,13 +37,13 @@ export const fileUploadController = {
                 try {
                     let updatedResult = await axios.post(REVO_PR_GENERATE_API, request.body[0], {
                         headers: {
-                            Authorization: authHeader
-                        }
+                            Authorization: authHeader,
+                        },
                     });
                     reply.send(updatedResult.data.Data.prurl);
                 }
                 catch (error) {
-                    console.log(error.message, 'ERROR IN FILE UPLOAD PO ');
+                    console.log(error.message, "ERROR IN FILE UPLOAD PO ");
                     reply.status(404).send(error.message);
                 }
             }
@@ -56,18 +56,20 @@ export const fileUploadController = {
                     if (e.servicedata) {
                         e.servicedata = JSON.stringify(e.servicedata);
                     }
+                    if (e.estimationdate) {
+                        delete e.estimationdate;
+                    }
                 });
-                console.log(request.body, "request.body COSTESTIMATION");
                 try {
                     let updatedResult = await axios.post(REVO_COST_ESTIMATTION_GENERATE_API, request.body[0], {
                         headers: {
-                            Authorization: authHeader
-                        }
+                            Authorization: authHeader,
+                        },
                     });
                     reply.send(updatedResult.data.data.estimationurl);
                 }
                 catch (error) {
-                    console.log(error.message, 'ERROR IN FILE UPLOAD PO ');
+                    console.log(error.message, "ERROR IN FILE UPLOAD PO ");
                     reply.status(404).send(error.message);
                 }
             }
@@ -75,18 +77,18 @@ export const fileUploadController = {
                 request.body = uploadResult.uploadData;
                 let data = {
                     id: request.body[0].id,
-                    invoiceurl: request.body[0].invoiceurl
+                    invoiceurl: request.body[0].invoiceurl,
                 };
                 try {
                     let updatedResult = await axios.post(REVO_INVOICE_GENERATE_API, data, {
                         headers: {
-                            Authorization: authHeader
-                        }
+                            Authorization: authHeader,
+                        },
                     });
                     reply.send(updatedResult.data.data.invoiceurl);
                 }
                 catch (error) {
-                    console.log(error.message, 'ERROR IN FILE UPLOAD PO ');
+                    console.log(error.message, "ERROR IN FILE UPLOAD PO ");
                     reply.status(404).send(error.message);
                 }
             }
@@ -94,18 +96,18 @@ export const fileUploadController = {
                 request.body = uploadResult.uploadData;
                 let data = {
                     id: request.body[0].id,
-                    invoiceurl: request.body[0].invoiceurl
+                    invoiceurl: request.body[0].invoiceurl,
                 };
                 try {
                     let updatedResult = await axios.post(REVO_INVOICE_GENERATE_API, data, {
                         headers: {
-                            Authorization: authHeader
-                        }
+                            Authorization: authHeader,
+                        },
                     });
                     reply.send(updatedResult.data.data.invoiceurl);
                 }
                 catch (error) {
-                    console.log(error.message, 'ERROR IN FILE UPLOAD PO ');
+                    console.log(error.message, "ERROR IN FILE UPLOAD PO ");
                     reply.status(404).send(error.message);
                 }
             }
