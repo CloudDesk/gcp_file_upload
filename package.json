@@ -10,7 +10,7 @@
     "revo-fileupload-build": "docker build -t revo-fileupload-sit .",
     "revo-fileupload-tag": "docker tag revo-fileupload-sit gcr.io/revo-dev-and-test/revo-fileupload-sit",
     "revo-fileupload-push": "docker push gcr.io/revo-dev-and-test/revo-fileupload-sit",
-    "revo-fileupload-deploy": "gcloud run deploy revo-fileupload-sit --image gcr.io/revo-dev-and-test/revo-fileupload-sit:latest --platform managed --region us-central1 --allow-unauthenticated --port 4500 --service-account revo-dev-fileupload@revo-dev-and-test.iam.gserviceaccount.com"
+    "revo-fileupload-deploy": "gcloud run deploy revo-fileupload-sit --image gcr.io/revo-dev-and-test/revo-fileupload-sit:latest --platform managed --region us-central1 --allow-unauthenticated --port 4500 --service-account revo-dev-fileupload@revo-dev-and-test.iam.gserviceaccount.com --execution-environment gen2"
   },
   "author": "",
   "license": "ISC",
