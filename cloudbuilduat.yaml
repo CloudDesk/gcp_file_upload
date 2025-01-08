@@ -1,0 +1,73 @@
+steps:
+
+  # Step 1: Set GCP project
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'config'
+      - 'set'
+      - 'project'
+      - 'revo-dev-and-test'
+
+  # Step 3: Build the Docker image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/revo-dev-and-test/revo-fileupload-uat:latest'
+      - '.'
+
+  # Step 4: Push the Docker image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/revo-dev-and-test/revo-fileupload-uat:latest'
+
+  # Step 5: Deploy the image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'revo365-fileupload-uat'
+      - '--image'
+      - 'gcr.io/revo-dev-and-test/revo-fileupload-uat:latest'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '4500'
+      - '--service-account'
+      - 'revo-test-fileupload@revo-dev-and-test.iam.gserviceaccount.com'
+      - '--set-env-vars'
+      - 'REVO_PRODUCT_IMAGE_API=${_REVO_PRODUCT_IMAGE_API}, REVO_PRODUCT_RATING_API=${_REVO_PRODUCT_RATING_API}, REVO_PO_INVOICE_API=${_REVO_PO_INVOICE_API}, REVO_PR_QUOTES_API=${_REVO_PR_QUOTES_API}, REVO_TICKETS_IMAGES_API=${_REVO_TICKETS_IMAGES_API}, REVO_PO_GENERATE_API=${_REVO_PO_GENERATE_API}, REVO_PR_GENERATE_API=${_REVO_PR_GENERATE_API}, REVO_INVOICE_GENERATE_API=${_REVO_INVOICE_GENERATE_API}, REVO_COST_ESTIMATTION_GENERATE_API=${_REVO_COST_ESTIMATTION_GENERATE_API}, REVO_PO_BUCKET=${_REVO_PO_BUCKET}, REVO_PR_BUCKET=${_REVO_PR_BUCKET}, REVO_COST_ESTIMATION_BUCKET=${_REVO_COST_ESTIMATION_BUCKET}, REVO_PRODUCT_INVOICE_BUCKET=${_REVO_PRODUCT_INVOICE_BUCKET}, REVO_SERVICE_INVOICE_BUCKET=${_REVO_SERVICE_INVOICE_BUCKET}, REVO_PRODUCT_IMAGES_BUCKET=${_REVO_PRODUCT_IMAGES_BUCKET}, REVO_RATINGS_IMAGES_BUCKET=${_REVO_RATINGS_IMAGES_BUCKET}, REVO_PO_INVOICE_BUCKET=${_REVO_PO_INVOICE_BUCKET}, REVO_PR_QUOTES_BUCKET=${_REVO_PR_QUOTES_BUCKET}, REVO_TICKET_IMAGES_BUCKET=${_REVO_TICKET_IMAGES_BUCKET}'
+
+# Substitution variables matched exactly to  env
+substitutions:
+  _REVO_PRODUCT_IMAGE_API: '${REVO_PRODUCT_IMAGE_API}'
+  _REVO_PRODUCT_RATING_API: '${REVO_PRODUCT_RATING_API}'
+  _REVO_PO_INVOICE_API: '${REVO_PO_INVOICE_API}'
+  _REVO_PR_QUOTES_API: '${REVO_PR_QUOTES_API}'
+  _REVO_TICKETS_IMAGES_API: '${REVO_TICKETS_IMAGES_API}'
+  _REVO_PO_GENERATE_API: '${REVO_PO_GENERATE_API}'
+  _REVO_PR_GENERATE_API: '${REVO_PR_GENERATE_API}'
+  _REVO_INVOICE_GENERATE_API: '${REVO_INVOICE_GENERATE_API}'
+  _REVO_COST_ESTIMATTION_GENERATE_API: '${REVO_COST_ESTIMATTION_GENERATE_API}'
+  _REVO_PO_BUCKET: '${REVO_PO_BUCKET}'
+  _REVO_PR_BUCKET: '${REVO_PR_BUCKET}'
+  _REVO_COST_ESTIMATION_BUCKET: '${REVO_COST_ESTIMATION_BUCKET}'
+  _REVO_PRODUCT_INVOICE_BUCKET: '${REVO_PRODUCT_INVOICE_BUCKET}'
+  _REVO_SERVICE_INVOICE_BUCKET: '${REVO_SERVICE_INVOICE_BUCKET}'
+  _REVO_PRODUCT_IMAGES_BUCKET: '${REVO_PRODUCT_IMAGES_BUCKET}'
+  _REVO_RATINGS_IMAGES_BUCKET: '${REVO_RATINGS_IMAGES_BUCKET}'
+  _REVO_PO_INVOICE_BUCKET: '${REVO_PO_INVOICE_BUCKET}'
+  _REVO_PR_QUOTES_BUCKET: '${REVO_PR_QUOTES_BUCKET}'
+  _REVO_TICKET_IMAGES_BUCKET: '${REVO_TICKET_IMAGES_BUCKET}'
+
+
+ 
+
+options:
+  logging: CLOUD_LOGGING_ONLY

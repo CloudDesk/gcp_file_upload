@@ -7,10 +7,10 @@
     "dev": "npx tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "revo-build": "docker build -t clouddesk_file_upload .",
-    "revo-tag": "docker tag clouddesk_file_upload gcr.io/docblitz-437213/clouddesk_file_upload",
-    "revo-push": "docker push gcr.io/docblitz-437213/clouddesk_file_upload",
-    "gcp-deploy": "gcloud run deploy clouddesk-file-upload --image gcr.io/docblitz-437213/docgen:latest --platform managed --region us-central1 --allow-unauthenticated --port 4500"
+    "revo-fileupload-build": "docker build -t revo-fileupload-sit .",
+    "revo-fileupload-tag": "docker tag revo-fileupload-sit gcr.io/revo-dev-and-test/revo-fileupload-sit",
+    "revo-fileupload-push": "docker push gcr.io/revo-dev-and-test/revo-fileupload-sit",
+    "revo-fileupload-deploy": "gcloud run deploy revo-fileupload-sit --image gcr.io/revo-dev-and-test/revo-fileupload-sit:latest --platform managed --region us-central1 --allow-unauthenticated --port 4500 --service-account revo-dev-fileupload@revo-dev-and-test.iam.gserviceaccount.com"
   },
   "author": "",
   "license": "ISC",
