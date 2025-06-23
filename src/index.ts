@@ -21,7 +21,7 @@ await fastify.register(cors, {
   maxAge: 86400,
   exposedHeaders: ["set-cookie"],
 });
-
+console.log('test');
 fastify.register(formbody);
 fastify.register(fastifyCookie);
 fastify.register(fastifyMultipart);
