@@ -40,6 +40,10 @@ export const fileUploadService = {
         template = "invoice/revoinvoiceproduct.docx";
         // bucketname = "revo_product_invoice";
         bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+      }else if (templateType === "productinvoice-instore") {
+        template = "invoice/revoinvoiceproductinstore.docx";
+        // bucketname = "revo_product_invoice";
+        bucketname = REVO_PRODUCT_INVOICE_BUCKET;
       }
       else if (templateType === "serviceinvoice") {
         template = "invoice/revoinvoiceservice.docx";
