@@ -9,6 +9,7 @@ import { revoPoInvoiceController } from "../controller/revoPoInvoce.controller.j
 import { revoPrQuotesController } from "../controller/revoPrQuotes.controller.js";
 import { revoTicketController } from "../controller/revoTicketController.js";
 import { fileUploadController } from "../controller/fileupload.controller.js";
+import { bannerImageController } from "../controller/revoBanner.controller.js";
 export const pdfroute = (fastify, opts, done) => {
     fastify.get("/", async (req, reply) => {
         return { hello: "world" };
@@ -46,6 +47,7 @@ export const pdfroute = (fastify, opts, done) => {
     fastify.post("/po/invoice", { preHandler: [filesUpload] }, revoPoInvoiceController.revoPoInvoiceController);
     fastify.post("/pr/quotes", { preHandler: [filesUpload] }, revoPrQuotesController.revoPrQuotesController);
     fastify.post("/tickets/images", { preHandler: [filesUpload] }, revoTicketController.revoTicketController);
+    fastify.post("/banner/image/", { preHandler: [filesUpload] }, bannerImageController.uploadBannerImage);
     //Rating with image upload
     //Rating with image upload
     fastify.post("/uploadrating/images", { preHandler: [filesUpload] }, async (req, reply) => {

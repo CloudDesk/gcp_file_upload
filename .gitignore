@@ -1,2 +1,15 @@
-.env
 node_modules
+.git
+.gitignore
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+desktop.ini
+npm-debug.log
+Dockerfile
+docker-compose.yml
+.env
+*.log
+*.tmp
+temp
