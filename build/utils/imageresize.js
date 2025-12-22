@@ -38,7 +38,11 @@ const imageResize = async (request) => {
             }
             catch (error) {
                 console.error("Error processing image:", error);
-                return { success: false, error: error.message || "Error processing image" };
+                let errorMessage = error.message || "Error processing image";
+                if (errorMessage.includes("marker was not found")) {
+                    errorMessage = "The uploaded image file appears to be corrupted. Please use a valid image file.";
+                }
+                return { success: false, error: errorMessage };
             }
         }
         const groupedUrls = resizedImageUrls.reduce((acc, obj) => {
