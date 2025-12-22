@@ -6,6 +6,7 @@ const imageResize = async (request) => {
         const upsertFiles = request.files();
         const productid = request.params.productid;
         console.log(productid, "productid");
+        let globalError = null;
         for await (const file of upsertFiles) {
             const chunks = [];
             // Read file into buffer
@@ -16,7 +17,8 @@ const imageResize = async (request) => {
             }
             catch (error) {
                 console.error("Error reading file stream:", error);
-                return { success: false, error: error.message || "Error reading file stream" };
+                globalError = { success: false, error: error.message || "Error reading file stream" };
+                continue; // Move to next file or finish stream
             }
             const fileBuffer = Buffer.concat(chunks);
             try {
@@ -42,9 +44,16 @@ const imageResize = async (request) => {
                 if (errorMessage.includes("marker was not found")) {
                     errorMessage = "The uploaded image file appears to be corrupted. Please use a valid image file.";
                 }
-                return { success: false, error: errorMessage };
+                // Store the error and continue consuming the stream (if there are other files)
+                // globalError = { success: false, error: errorMessage };
+                // We don't break here because we need to let the loop finish for other files in the stream to completely drain the request
+                console.warn(`Skipping corrupted file ${file.filename}: ${errorMessage}`);
             }
         }
+        // If we encountered a fatal processing error, return it now that stream is drained
+        // if (globalError) {
+        //    return globalError;
+        // }
         const groupedUrls = resizedImageUrls.reduce((acc, obj) => {
             const key = Object.keys(obj)[0];
             const value = obj[key];
