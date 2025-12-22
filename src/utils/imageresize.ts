@@ -24,7 +24,7 @@ const imageResize = async (request: any) => {
         }
       } catch (error) {
         console.error("Error reading file stream:", error);
-        return {success:false,error:error.message || "Error reading file stream"};
+        return { success: false, error: error.message || "Error reading file stream" };
       }
 
       const fileBuffer = Buffer.concat(chunks);
@@ -66,7 +66,13 @@ const imageResize = async (request: any) => {
         resizedImageUrls.push({ Small: smallUrl.url });
       } catch (error) {
         console.error("Error processing image:", error);
-        return {success:false,error:error.message || "Error processing image"};
+
+        let errorMessage = error.message || "Error processing image";
+        if (errorMessage.includes("marker was not found")) {
+          errorMessage = "The uploaded image file appears to be corrupted. Please use a valid image file.";
+        }
+
+        return { success: false, error: errorMessage };
       }
     }
 
@@ -85,7 +91,7 @@ const imageResize = async (request: any) => {
   } catch (error) {
     console.error("Error in image resizing function:", error);
     return {
-      success:false,
+      success: false,
       statusCode: 500,
       error: "Internal Server Error",
       message: error.message || "Error in Resizing Images",
