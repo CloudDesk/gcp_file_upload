@@ -74,21 +74,17 @@ export const fileUploadController = {
                 }
             }
             else if (uploadResult.success && templateType === "productinvoice") {
-                console.log(uploadResult, "productinvoice");
                 request.body = uploadResult.uploadData;
-                console.log(request.body, "request.body productinvoice");
                 let data = {
                     id: request.body[0].id,
                     invoiceurl: request.body[0].invoiceurl,
                 };
                 try {
-                    console.log(data, "data productinvoice");
                     let updatedResult = await axios.post(REVO_INVOICE_GENERATE_API, data, {
                         headers: {
                             Authorization: authHeader,
                         },
                     });
-                    console.log(updatedResult, "updatedResult");
                     reply.send(updatedResult.data.data.invoiceurl);
                 }
                 catch (error) {

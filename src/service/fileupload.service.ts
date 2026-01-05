@@ -29,7 +29,7 @@ export const fileUploadService = {
           if (e.servicedata) {
             e.servicedata = JSON.parse(e.servicedata);
           }
-            e.estimationdate = new Date().toLocaleDateString();
+          e.estimationdate = new Date().toLocaleDateString();
 
         })
         console.log(uploadData, "uploadData aFTER PARSE");
@@ -37,19 +37,23 @@ export const fileUploadService = {
         bucketname = REVO_COST_ESTIMATION_BUCKET;
       }
       else if (templateType === "productinvoice") {
-        // Choose template based on invoice type; default to product invoice.
-        const invoiceFor = Array.isArray(uploadData)
-        ? uploadData[0]?.invoicefor
-        : uploadData?.invoicefor;
-    if (invoiceFor === "rental") {
-        template = "invoice/revoinvoicerental.docx";
-    }
-    else {
         template = "invoice/revoinvoiceproduct.docx";
-    }
+        // Convert invoicedata to object if it is a string
+        if (typeof uploadData[0].invoicedata === 'string') {
+          uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+        }
+
+        const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item: any) =>
+          item.type === "manual" || item.type === "manualstore"
+        );
+
+        if (hasManualItems) {
+          template = "invoice/revoinvoicerental.docx";
+        }
+
         // bucketname = "revo_product_invoice";
         bucketname = REVO_PRODUCT_INVOICE_BUCKET;
-      }else if (templateType === "productinvoice-instore") {
+      } else if (templateType === "productinvoice-instore") {
         template = "invoice/revoinvoiceproductinstore.docx";
         // bucketname = "revo_product_invoice";
         bucketname = REVO_PRODUCT_INVOICE_BUCKET;

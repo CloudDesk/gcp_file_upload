@@ -21,17 +21,10 @@ export const blogImageService = {
                 });
             }
             console.log('Blogs Image URLs:', blogsImageUrls);
-            // Extract blogname from request body and wrap in array structure [{}]
-            const blogname = request.body?.blogname || '';
-            const blognameArray = [{ blogname }]; // Wrap in array structure as backend expects
-            console.log('Blog Name Array:', blognameArray);
-            // Send all image URLs as array [{url: ..., blogname: ...}, ...]
+            // Send all image URLs as array [{url: ...}, ...]
             let insertBlogImages;
             if (blogsImageUrls.length > 0) {
-                const imagesArray = blogsImageUrls.map(url => ({
-                    url,
-                    blogname: blognameArray[0].blogname // Extract blogname from array structure
-                }));
+                const imagesArray = blogsImageUrls.map(url => ({ url })); // Required format
                 console.log('Images Array to send:', imagesArray);
                 insertBlogImages = await axios.post(REVO_BLOGS_IMAGES_API, imagesArray); // API receives array
             }

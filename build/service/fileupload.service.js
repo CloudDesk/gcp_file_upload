@@ -37,15 +37,14 @@ export const fileUploadService = {
                 bucketname = REVO_COST_ESTIMATION_BUCKET;
             }
             else if (templateType === "productinvoice") {
-                // Choose template based on invoice type; default to product invoice.
-                const invoiceFor = Array.isArray(uploadData)
-                    ? uploadData[0]?.invoicefor
-                    : uploadData?.invoicefor;
-                if (invoiceFor === "rental") {
-                    template = "invoice/revoinvoicerental.docx";
+                template = "invoice/revoinvoiceproduct.docx";
+                // Convert invoicedata to object if it is a string
+                if (typeof uploadData[0].invoicedata === 'string') {
+                    uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
                 }
-                else {
-                    template = "invoice/revoinvoiceproduct.docx";
+                const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item) => item.type === "manual" || item.type === "manualstore");
+                if (hasManualItems) {
+                    template = "invoice/revoinvoicerental.docx";
                 }
                 // bucketname = "revo_product_invoice";
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
