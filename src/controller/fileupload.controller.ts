@@ -92,10 +92,12 @@ export const fileUploadController = {
         }
       } else if (uploadResult.success && templateType === "productinvoice") {
         request.body = uploadResult.uploadData;
+        console.log(request.body, "request.body productinvoice");
         let data = {
           id: request.body[0].id,
           invoiceurl: request.body[0].invoiceurl,
         };
+        console.log(data, "data productinvoice");
         try {
           let updatedResult = await axios.post(
             REVO_INVOICE_GENERATE_API,
@@ -107,6 +109,7 @@ export const fileUploadController = {
             }
           );
           reply.send(updatedResult.data.data.invoiceurl);
+          console.log(updatedResult.data.data.invoiceurl, "updatedResult.data.data.invoiceurl");
         } catch (error) {
           console.log(error.message, "ERROR IN FILE UPLOAD PO ");
           reply.status(404).send(error.message);
