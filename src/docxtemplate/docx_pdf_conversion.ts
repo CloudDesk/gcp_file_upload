@@ -48,13 +48,12 @@ const fileGeneration = async (data: any) => {
       compression: "DEFLATE",
     });
 
-    const filename = `${
-      data.ponumber ||
+    const filename = `${data.ponumber ||
       data.prnumber ||
       data.invoicenumber ||
       data.ticketnumber ||
       "Revo"
-    }.docx`;
+      }.docx`;
     const bucket = storage.bucket(bucketName);
     const docxFile = bucket.file(filename);
     await docxFile.save(buf, {
@@ -90,7 +89,7 @@ const convertToPdf = async (docxBuffer: any, pdfFilename: any, id: any) => {
       contentType: "application/pdf",
     });
 
-    const fileUrl = `https://storage.cloud.google.com/${bucketName}/${pdfFilename}`;
+    const fileUrl = `https://storage.googleapis.com/${bucketName}/${pdfFilename}`;
     console.log(fileUrl, "fileurl");
     await axios
       .get(fileUrl)
