@@ -6,6 +6,7 @@ export const revoimageservice = {
         try {
             if (request.params.productid) {
                 let data = await imageResize(request);
+                console.log(data, "data from image resize");
                 if (data?.success === false) {
                     reply.status(500).send(data);
                 }
