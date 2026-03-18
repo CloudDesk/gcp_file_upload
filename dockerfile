@@ -38,11 +38,17 @@ WORKDIR /app
 # Copy package.json and lock file
 COPY package*.json ./
 
+# Install application dependencies
+RUN npm i
+
 # Install dependencies (before copying source)
 RUN npm ci --omit=dev
 
 # Copy app source
 COPY . .
+
+# Build the application
+RUN npm run build
 
 # Expose port
 EXPOSE 4500
