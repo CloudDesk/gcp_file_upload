@@ -6,6 +6,7 @@ import util from "util";
 import { exec } from "child_process";
 import { fileURLToPath } from "url";
 import { uploadPDF } from "../cloudstorge/cloudstorage.js";
+import { removeTrailingBlankPdfPages } from "./pdfCleanup.js";
 // import { PROTOCOL } from "../../config/config.js";
 const PROTOCOL = "http";
 const __filename = fileURLToPath(import.meta.url);
@@ -114,6 +115,7 @@ const convertToPdf = async (
       return stderr;
     }
 
+    await removeTrailingBlankPdfPages(pdfFilePath);
 
     return { fileurl, relativeFilePath, id, poNumber, filename };
   } catch (error: any) {

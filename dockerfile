@@ -29,8 +29,16 @@
 # Use Node.js 20 as base image
 FROM node:20
 
-# Install LibreOffice for document conversion
-RUN apt-get update && apt-get install -y libreoffice && apt-get clean
+# Install LibreOffice for document conversion, fonts for rupee rendering,
+# and Poppler tools used to detect blank trailing PDF pages.
+RUN apt-get update && apt-get install -y \
+    fontconfig \
+    fonts-noto-core \
+    libreoffice \
+    poppler-utils \
+    && fc-cache -f \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
