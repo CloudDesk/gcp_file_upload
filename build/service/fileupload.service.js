@@ -60,6 +60,9 @@ export const fileUploadService = {
                 bucketname = REVO_SERVICE_INVOICE_BUCKET;
             }
             let result = await GenerateDocx(request, uploadData, template);
+            if (!result?.relativeFilePath) {
+                throw new Error("PDF conversion did not produce a file");
+            }
             console.log(result, "result from invoiceData");
             const fileBuffer = await fs.readFile(result.relativeFilePath);
             let uploadPdfToGcs = await uploadFilesToGcs2(bucketname, result.filename, fileBuffer, result.poNumber);

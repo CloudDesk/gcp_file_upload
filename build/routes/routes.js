@@ -70,8 +70,21 @@ export const pdfroute = (fastify, opts, done) => {
                     ratingurl.push(file.url);
                 });
             }
-            req.body.url = ratingurl;
-            let insertrating = await axios.post(REVO_PRODUCT_RATING_API, req.body);
+            // Both orderid (orders.id FK) and orderlineid (orderline.id FK) are separate
+            // columns on the rating table. The CHECK constraint requires:
+            //   admincreated = TRUE OR (orderid IS NOT NULL AND userid IS NOT NULL)
+            // So orderid (the parent ORDERS pk) must be provided by the frontend.
+            const ratingPayload = {
+                userid: req.body.userid,
+                usermail: req.body.usermail,
+                productid: req.body.productid,
+                orderlineid: req.body.orderlineid,
+                starrating: req.body.starrating,
+                comments: req.body.comments,
+                url: ratingurl,
+            };
+            console.log(ratingPayload, "ratingPayload");
+            let insertrating = await axios.post(REVO_PRODUCT_RATING_API, ratingPayload);
             console.log(insertrating, "insertrating");
             if (insertrating.data) {
                 reply.send(insertrating.data);

@@ -2,9 +2,10 @@ import PizZip from "pizzip";
 import Docxtemplater from "docxtemplater";
 import fs from "fs";
 import path, { dirname, join, resolve } from "path";
+import os from "os";
 import util from "util";
 import { exec } from "child_process";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { uploadPDF } from "../cloudstorge/cloudstorage.js";
 import { removeTrailingBlankPdfPages } from "./pdfCleanup.js";
 // import { PROTOCOL } from "../../config/config.js";
@@ -17,6 +18,36 @@ const uploadsDir = path.resolve(__dirname, "../../uploads");
 const execAsync = util.promisify(exec);
 let returnResult: any;
 let globaltemplate: any;
+
+const resolveSofficeExecutable = () => {
+  if (process.env.SOFFICE_PATH) {
+    if (!fs.existsSync(process.env.SOFFICE_PATH)) {
+      throw new Error(`SOFFICE_PATH does not exist: ${process.env.SOFFICE_PATH}`);
+    }
+    return process.env.SOFFICE_PATH;
+  }
+
+  if (process.platform === "win32") {
+    const candidates = [
+      "C:\\Program Files\\LibreOffice\\program\\soffice.com",
+      "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.com",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
+    ];
+    const installedPath = candidates.find((candidate) => fs.existsSync(candidate));
+
+    if (!installedPath) {
+      throw new Error(
+        "LibreOffice is required for PDF conversion. Install LibreOffice locally or run the Docker image."
+      );
+    }
+
+    return installedPath;
+  }
+
+  return "soffice";
+};
+
 const GenerateDocx = async (request: any, data: any, template: any) => {
   try {
     globaltemplate = template;
@@ -26,7 +57,7 @@ const GenerateDocx = async (request: any, data: any, template: any) => {
       return finalOutput;
     }
   } catch (error: any) {
-    return error.message;
+    throw error;
   }
 };
 
@@ -92,7 +123,7 @@ const fileGeneration = async (data: any) => {
     );
     return result;
   } catch (error: any) {
-    return error.message;
+    throw error;
   }
 };
 
@@ -102,17 +133,38 @@ const convertToPdf = async (
   id: any,
   poNumber
 ) => {
+  const libreOfficeProfileDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), "revo-soffice-")
+  );
+
   try {
     let fileurl: String;
-    const command = `soffice --headless --convert-to pdf "${docxFilePath}" --outdir "${uploadsDir}"`;
+    const sofficeExecutable = resolveSofficeExecutable();
+    const libreOfficeProfileUrl = pathToFileURL(libreOfficeProfileDir).href;
+
+    if (fs.existsSync(pdfFilePath)) {
+      fs.unlinkSync(pdfFilePath);
+    }
+
+    const command =
+      `"${sofficeExecutable}" ` +
+      `"-env:UserInstallation=${libreOfficeProfileUrl}" ` +
+      `--headless --norestore --nodefault --nolockcheck --nofirststartwizard ` +
+      `--convert-to pdf "${docxFilePath}" --outdir "${uploadsDir}"`;
     const { stdout, stderr } = await execAsync(command);
 
-    const relativeFilePath = path.resolve("uploads", pdfFilePath);
+    if (!fs.existsSync(pdfFilePath)) {
+      throw new Error(
+        `LibreOffice did not create the PDF. ${stderr || stdout || ""}`.trim()
+      );
+    }
+
+    const relativeFilePath = pdfFilePath;
     let filename = pdfFilePath.replace(/^.*[\\/]/, "");
     // fileurl = returnResult.protocol + "s://" + returnResult.headers.host + '/' + filename
     fileurl = PROTOCOL + "://" + returnResult.headers.host + "/" + filename;
     if (stderr) {
-      return stderr;
+      console.warn("LibreOffice conversion warning:", stderr);
     }
 
     await removeTrailingBlankPdfPages(pdfFilePath);
@@ -120,6 +172,9 @@ const convertToPdf = async (
     return { fileurl, relativeFilePath, id, poNumber, filename };
   } catch (error: any) {
     console.error("Error :", error);
+    throw error;
+  } finally {
+    fs.rmSync(libreOfficeProfileDir, { recursive: true, force: true });
   }
 };
 
