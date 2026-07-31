@@ -94,6 +94,16 @@ def configure_table(table, widths: list[float]) -> None:
             cell_width.set(qn("w:type"), "dxa")
 
 
+def remove_extra_blank_row(table) -> None:
+    if len(table.rows) <= 2:
+        return
+
+    extra_row = table.rows[2]
+    if any(cell.text.strip() for cell in extra_row.cells):
+        raise RuntimeError("Expected the third table row to be blank")
+    table._tbl.remove(extra_row._tr)
+
+
 def update_product_table(table) -> None:
     widths = [0.40, 1.75, 1.55, 0.55, 0.85, 1.20, 1.55]
     headers = [
@@ -115,6 +125,7 @@ def update_product_table(table) -> None:
         "{totalamount}{/}{/}",
     ]
 
+    remove_extra_blank_row(table)
     configure_table(table, widths)
     for column_index, header in enumerate(headers):
         set_cell_text(
@@ -133,7 +144,6 @@ def update_product_table(table) -> None:
                 else WD_ALIGN_PARAGRAPH.CENTER
             ),
         )
-        set_cell_text(table.rows[2].cells[column_index], "", font_size=8.5)
 
 
 def update_service_table(table) -> None:
@@ -147,6 +157,7 @@ def update_service_table(table) -> None:
         "{totalamount}{/}{/}",
     ]
 
+    remove_extra_blank_row(table)
     configure_table(table, widths)
     for column_index, header in enumerate(headers):
         set_cell_text(
@@ -165,7 +176,6 @@ def update_service_table(table) -> None:
                 else WD_ALIGN_PARAGRAPH.CENTER
             ),
         )
-        set_cell_text(table.rows[2].cells[column_index], "", font_size=9)
 
 
 def update_tax_labels(document) -> None:
