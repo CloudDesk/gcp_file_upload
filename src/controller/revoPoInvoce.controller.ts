@@ -1,24 +1,21 @@
 import { revoPoInvoiceService } from "../service/revoPoInvoice.service.js";
+import axios from "axios";
 
 export const revoPoInvoiceController = {
-
     revoPoInvoiceController: async (request: any, reply: any) => {
-
         try {
-            let uploadPonvoice = await revoPoInvoiceService.revoPoInvoiceService(request, reply);
-            console.log(uploadPonvoice, 'uploadimageresult');
-            if (uploadPonvoice.data.message) {
-                reply.send(uploadPonvoice.data);
-            }
-            else {
-                reply.status(500).send(uploadPonvoice.data)
+            const uploadPonvoice = await revoPoInvoiceService.revoPoInvoiceService(request);
+            return reply.status(uploadPonvoice.status).send(uploadPonvoice.data);
+        } catch (error: any) {
+            console.error("Error creating PO invoice:", error);
+            if (axios.isAxiosError(error) && error.response) {
+                return reply.status(error.response.status).send(error.response.data);
             }
 
-        } catch (error) {
-            console.log(error.message);
-            reply.send(error.message);
-
+            reply.status(error.statusCode || 500).send({
+                status: "fail",
+                message: error.message || "Unable to create PO invoice",
+            });
         }
-    }
-
-}
+    },
+};
