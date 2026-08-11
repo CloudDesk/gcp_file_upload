@@ -74,7 +74,7 @@ export async function uploadRevoFiles(files, bucketNameData, foldername) {
                     success: true,
                     message: "File uploaded successfully",
                     filename: folderPath,
-                    url: `https://storage.cloud.google.com/${bucketNameData}/${folderPath}`,
+                    url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
                 });
             });
             try {
@@ -147,7 +147,7 @@ export async function uploadFile(filename, file, size, productId, organisation) 
                     success: true,
                     message: "File uploaded successfully",
                     filename: folderPath,
-                    url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+                    url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
                 });
             });
             if (Buffer.isBuffer(file)) {
@@ -202,7 +202,7 @@ export async function uploadProductImage(filename, file, size, productId, organi
                     success: true,
                     message: "File uploaded successfully",
                     filename: folderPath,
-                    url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+                    url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
                 });
             });
             if (Buffer.isBuffer(file)) {
@@ -256,7 +256,7 @@ export async function uploadPoInvoice(bucketName, filename, file, foldername) {
                     success: true,
                     message: "File uploaded successfully",
                     filename: folderPath,
-                    url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+                    url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
                 });
             });
             if (Buffer.isBuffer(file)) {
@@ -319,7 +319,7 @@ export async function uploadFileToGcp(filename, file, organisation) {
                     success: true,
                     message: "File uploaded successfully",
                     filename,
-                    url: `https://storage.cloud.google.com/${bucketName}/${filename}`,
+                    url: `https://storage.googleapis.com/${bucketName}/${filename}`,
                 });
             });
             if (Buffer.isBuffer(file)) {
@@ -380,7 +380,7 @@ export async function getBucketFiles(bucketName, options) {
             });
             return {
                 name: file.name,
-                url: `https://storage.cloud.google.com/${sanitizedBucketName}/${file.name}`,
+                url: `https://storage.googleapis.com/${sanitizedBucketName}/${file.name}`,
                 signedUrl: signedUrl,
                 size: size,
                 contentType: metadata.contentType,
@@ -462,7 +462,7 @@ export async function uploadFilesToGcs2(bucketName, filename, file, foldername) 
                     success: true,
                     message: "File uploaded successfully",
                     filename: folderPath,
-                    url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+                    url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
                 });
             });
             blobStream.end(file);

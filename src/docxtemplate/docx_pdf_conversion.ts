@@ -6,6 +6,7 @@ import { exec } from "child_process";
 import util from "util";
 import fs from "fs";
 import axios from "axios";
+import { removeTrailingBlankPdfPages } from "./pdfCleanup.js";
 
 const storage = new Storage({
   keyFilename: "src/cloudstorge/docblitz-437213-d99f2718bd72.json",
@@ -48,13 +49,12 @@ const fileGeneration = async (data: any) => {
       compression: "DEFLATE",
     });
 
-    const filename = `${
-      data.ponumber ||
+    const filename = `${data.ponumber ||
       data.prnumber ||
       data.invoicenumber ||
       data.ticketnumber ||
       "Revo"
-    }.docx`;
+      }.docx`;
     const bucket = storage.bucket(bucketName);
     const docxFile = bucket.file(filename);
     await docxFile.save(buf, {
@@ -82,6 +82,7 @@ const convertToPdf = async (docxBuffer: any, pdfFilename: any, id: any) => {
     await execAsync(`${command} ${tempDocxPath}`);
 
     const pdfPath = tempDocxPath.replace(".docx", ".pdf");
+    await removeTrailingBlankPdfPages(pdfPath);
     const pdfBuffer = fs.readFileSync(pdfPath);
 
     const pdfFile = storage.bucket(bucketName).file(pdfFilename);
@@ -90,7 +91,7 @@ const convertToPdf = async (docxBuffer: any, pdfFilename: any, id: any) => {
       contentType: "application/pdf",
     });
 
-    const fileUrl = `https://storage.cloud.google.com/${bucketName}/${pdfFilename}`;
+    const fileUrl = `https://storage.googleapis.com/${bucketName}/${pdfFilename}`;
     console.log(fileUrl, "fileurl");
     await axios
       .get(fileUrl)

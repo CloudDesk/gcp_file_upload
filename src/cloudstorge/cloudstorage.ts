@@ -103,7 +103,7 @@ export async function uploadRevoFiles(
               success: true,
               message: "File uploaded successfully",
               filename: folderPath,
-              url: `https://storage.cloud.google.com/${bucketNameData}/${folderPath}`,
+              url: `https://storage.googleapis.com/${bucketNameData}/${folderPath}`,
             });
           });
 
@@ -196,7 +196,7 @@ export async function uploadFile(
           success: true,
           message: "File uploaded successfully",
           filename: folderPath,
-          url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+          url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
         });
       });
 
@@ -266,7 +266,7 @@ export async function uploadProductImage(
           success: true,
           message: "File uploaded successfully",
           filename: folderPath,
-          url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+          url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
         });
       });
 
@@ -335,7 +335,7 @@ export async function uploadPoInvoice(
           success: true,
           message: "File uploaded successfully",
           filename: folderPath,
-          url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+          url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
         });
       });
 
@@ -413,7 +413,7 @@ export async function uploadFileToGcp(
           success: true,
           message: "File uploaded successfully",
           filename,
-          url: `https://storage.cloud.google.com/${bucketName}/${filename}`,
+          url: `https://storage.googleapis.com/${bucketName}/${filename}`,
         });
       });
 
@@ -496,7 +496,7 @@ export async function getBucketFiles(
 
         return {
           name: file.name,
-          url: `https://storage.cloud.google.com/${sanitizedBucketName}/${file.name}`,
+          url: `https://storage.googleapis.com/${sanitizedBucketName}/${file.name}`,
           signedUrl: signedUrl,
           size: size,
           contentType: metadata.contentType,
@@ -610,7 +610,7 @@ export async function uploadFilesToGcs2(
           success: true,
           message: "File uploaded successfully",
           filename: folderPath,
-          url: `https://storage.cloud.google.com/${bucketName}/${folderPath}`,
+          url: `https://storage.googleapis.com/${bucketName}/${folderPath}`,
         });
       });
 

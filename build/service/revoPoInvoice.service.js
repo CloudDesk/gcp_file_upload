@@ -2,36 +2,44 @@ import axios from "axios";
 import { uploadRevoFiles } from "../cloudstorge/cloudstorage.js";
 import { REVO_PO_INVOICE_API, REVO_PO_INVOICE_BUCKET } from "../utils/config.js";
 export const revoPoInvoiceService = {
-    revoPoInvoiceService: async (request, reply) => {
-        let authHeader = request.headers.authorization;
-        const files = request.files;
+    revoPoInvoiceService: async (request) => {
+        const authHeader = request.headers.authorization;
+        const files = request.files || [];
+        if (!request.body.ponumber) {
+            const error = new Error("PO number is missing");
+            error.statusCode = 400;
+            throw error;
+        }
+        if (files.length === 0) {
+            const error = new Error("Invoice file is missing");
+            error.statusCode = 400;
+            throw error;
+        }
+        let data;
         try {
-            let data;
-            if (files.length > 0) {
-                if (!request.body.ponumber) {
-                    reply.status(400).send("ponumber  is missing");
-                }
-                data = await uploadRevoFiles(files, REVO_PO_INVOICE_BUCKET, request.body.ponumber);
-                console.log(data, "data from cloud storages");
-            }
-            let invoiceurl = [];
-            if (data.success && data.files.length > 0) {
-                data.files.forEach((file) => {
-                    invoiceurl.push(file.url);
-                });
-            }
-            request.body.invoiceurl = invoiceurl[0];
-            let insertPoInvoice = await axios.post(REVO_PO_INVOICE_API, request.body, {
-                headers: {
-                    Authorization: authHeader
-                }
-            });
-            return insertPoInvoice;
+            data = await uploadRevoFiles(files, REVO_PO_INVOICE_BUCKET, request.body.ponumber);
         }
         catch (error) {
-            console.error("Error uploading files:", error);
-            reply.status(500).send({ status: "fail", message: "File upload failed" });
+            console.error("Error uploading PO invoice file:", error);
+            const uploadError = new Error("File upload failed");
+            uploadError.statusCode = 500;
+            throw uploadError;
         }
+        const uploadedFile = data?.files?.find((file) => file.success);
+        if (!data?.success || !uploadedFile?.url) {
+            const error = new Error("File upload failed");
+            error.statusCode = 500;
+            throw error;
+        }
+        const invoicePayload = {
+            ...request.body,
+            invoiceurl: uploadedFile.url,
+        };
+        return axios.post(REVO_PO_INVOICE_API, invoicePayload, {
+            headers: {
+                Authorization: authHeader,
+            },
+        });
     },
 };
 //# sourceMappingURL=revoPoInvoice.service.js.map

@@ -5,6 +5,7 @@ import { exec } from "child_process";
 import util from "util";
 import fs from "fs";
 import axios from "axios";
+import { removeTrailingBlankPdfPages } from "./pdfCleanup.js";
 const storage = new Storage({
     keyFilename: "src/cloudstorge/docblitz-437213-d99f2718bd72.json",
 });
@@ -70,13 +71,14 @@ const convertToPdf = async (docxBuffer, pdfFilename, id) => {
         fs.writeFileSync(tempDocxPath, docxBuffer);
         await execAsync(`${command} ${tempDocxPath}`);
         const pdfPath = tempDocxPath.replace(".docx", ".pdf");
+        await removeTrailingBlankPdfPages(pdfPath);
         const pdfBuffer = fs.readFileSync(pdfPath);
         const pdfFile = storage.bucket(bucketName).file(pdfFilename);
         await pdfFile.save(pdfBuffer, {
             resumable: false,
             contentType: "application/pdf",
         });
-        const fileUrl = `https://storage.cloud.google.com/${bucketName}/${pdfFilename}`;
+        const fileUrl = `https://storage.googleapis.com/${bucketName}/${pdfFilename}`;
         console.log(fileUrl, "fileurl");
         await axios
             .get(fileUrl)
