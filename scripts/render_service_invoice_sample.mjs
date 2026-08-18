@@ -27,6 +27,10 @@ const sampleInvoice = {
   customeraddress: "New Vilangudi, Madurai, Tamil Nadu - 625018",
   customerphonenumber: "6765678909",
   customergstnumber: "-",
+  shippingcustomername: "Delivery Contact",
+  shippingcustomeraddress: "42, Anna Nagar, Chennai, Tamil Nadu - 600040",
+  shippingcustomerphonenumber: "9876543210",
+  shippingcustomergstnumber: "33AAMCR5393J1ZV",
   invoicedata: {
     items: [
       {
@@ -42,6 +46,10 @@ const sampleInvoice = {
     tax: 18,
     taxlabel: "CGST 9% + SGST 9%",
     taxamount: 7200,
+    taxcomponents: [
+      { label: "CGST Amount (9%)", amount: 3600 },
+      { label: "SGST Amount (9%)", amount: 3600 },
+    ],
     total: 47200,
   },
   servicedata: {
@@ -57,6 +65,10 @@ const sampleInvoice = {
     tax: 18,
     taxlabel: "CGST 9% + SGST 9%",
     taxamount: 1800,
+    taxcomponents: [
+      { label: "CGST Amount (9%)", amount: 900 },
+      { label: "SGST Amount (9%)", amount: 900 },
+    ],
     total: 11800,
   },
   servicetype: "Repair",

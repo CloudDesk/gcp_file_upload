@@ -2,6 +2,52 @@ import fs from "fs/promises";
 import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx.js";
 import { REVO_COST_ESTIMATION_BUCKET, REVO_PO_BUCKET, REVO_PR_BUCKET, REVO_PRODUCT_INVOICE_BUCKET, REVO_SERVICE_INVOICE_BUCKET } from "../utils/config.js";
+const parseAddressSnapshot = (value) => {
+    if (!value)
+        return null;
+    if (typeof value === "object" && !Array.isArray(value))
+        return value;
+    try {
+        const parsed = JSON.parse(String(value));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed
+            : null;
+    }
+    catch {
+        return null;
+    }
+};
+const formatAddressSnapshot = (address) => address
+    ? [
+        address.doornumber,
+        address.address,
+        address.landmark,
+        address.city,
+        address.state,
+        address.pincode,
+    ]
+        .map((value) => String(value ?? "").trim())
+        .filter(Boolean)
+        .join(", ")
+    : "";
+const prepareInvoiceShippingFields = (invoice) => {
+    const billingAddress = parseAddressSnapshot(invoice?.billingaddresssnapshot);
+    const shippingAddress = parseAddressSnapshot(invoice?.shippingaddresssnapshot);
+    invoice.customername =
+        String(billingAddress?.name || invoice?.customername || "").trim();
+    invoice.customeraddress =
+        formatAddressSnapshot(billingAddress) || invoice?.customeraddress || "";
+    invoice.customerphonenumber =
+        String(billingAddress?.mobilenumber || invoice?.customerphonenumber || "").trim();
+    invoice.shippingcustomername =
+        String(shippingAddress?.name || invoice?.customername || "").trim();
+    invoice.shippingcustomeraddress =
+        formatAddressSnapshot(shippingAddress) || invoice?.customeraddress || "";
+    invoice.shippingcustomerphonenumber =
+        String(shippingAddress?.mobilenumber || invoice?.customerphonenumber || "").trim();
+    invoice.shippingcustomergstnumber =
+        String(shippingAddress?.gstnumber || invoice?.customergstnumber || "").trim();
+};
 export const fileUploadService = {
     uploadFile: async (request, uploadData, reply) => {
         console.log(uploadData, "DATA IS");
@@ -42,6 +88,7 @@ export const fileUploadService = {
                 if (typeof uploadData[0].invoicedata === 'string') {
                     uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
                 }
+                prepareInvoiceShippingFields(uploadData[0]);
                 const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item) => item.type === "manual" || item.type === "manualstore");
                 if (hasManualItems) {
                     template = "invoice/revoinvoicerental.docx";
@@ -56,6 +103,7 @@ export const fileUploadService = {
             }
             else if (templateType === "serviceinvoice") {
                 template = "invoice/revoinvoiceservice.docx";
+                prepareInvoiceShippingFields(uploadData[0]);
                 // bucketname = "revo_service_invoice";
                 bucketname = REVO_SERVICE_INVOICE_BUCKET;
             }

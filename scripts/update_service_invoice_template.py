@@ -179,18 +179,30 @@ def update_service_table(table) -> None:
 
 
 def update_tax_labels(document) -> None:
-    replacements = {
-        "Tax%: {#invoicedata}{tax}{/}": "Tax: {#invoicedata}{taxlabel}{/}",
-        "Tax%: {#servicedata}{tax}{/}": "Tax: {#servicedata}{taxlabel}{/}",
-    }
+    for paragraph in list(document.paragraphs):
+        text = paragraph.text.strip()
+        if text in {
+            "Tax%: {#invoicedata}{tax}{/}",
+            "Tax%: {#servicedata}{tax}{/}",
+            "Tax: {#invoicedata}{taxlabel}{/}",
+            "Tax: {#servicedata}{taxlabel}{/}",
+        }:
+            paragraph._element.getparent().remove(paragraph._element)
+
+
+def update_tax_breakdowns(document) -> None:
     for paragraph in document.paragraphs:
-        replacement = replacements.get(paragraph.text.strip())
-        if replacement is None:
+        text = paragraph.text.strip()
+        if "{#invoicedata}{taxamount}{/}" in text:
+            placeholder = "{#invoicedata}{#taxcomponents}{label}: {amount}\n{/}{/}"
+        elif "{#servicedata}{taxamount}{/}" in text:
+            placeholder = "{#servicedata}{#taxcomponents}{label}: {amount}\n{/}{/}"
+        else:
             continue
 
         for run in list(paragraph.runs):
             paragraph._p.remove(run._element)
-        run = paragraph.add_run(replacement)
+        run = paragraph.add_run(placeholder)
         run.bold = True
         run.font.name = "Calibri"
         run.font.size = Pt(11)
@@ -204,6 +216,41 @@ def remove_service_type_line(document) -> None:
             paragraph._element.getparent().remove(paragraph._element)
 
 
+def update_roundoff_line(document) -> None:
+    for paragraph in document.paragraphs:
+        if "Total: {totalorderamount}" not in paragraph.text:
+            continue
+        for run in list(paragraph.runs):
+            paragraph._p.remove(run._element)
+        run = paragraph.add_run("Round Off: {roundoffamount}\nTotal: {totalorderamount}")
+        run.bold = True
+        run.font.name = "Calibri"
+        run.font.size = Pt(11)
+        run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
+        run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")
+        return
+
+
+def update_shipping_address_fields(document) -> None:
+    replacements = {
+        16: [("{shippingcustomername}", False)],
+        17: [("{shippingcustomeraddress}", False)],
+        18: [("Phone Number: ", True), ("{shippingcustomerphonenumber}", False)],
+        19: [("GST: ", True), ("{shippingcustomergstnumber}", False)],
+    }
+    for index, segments in replacements.items():
+        paragraph = document.paragraphs[index]
+        for run in list(paragraph.runs):
+            paragraph._p.remove(run._element)
+        for text, is_bold in segments:
+            run = paragraph.add_run(text)
+            run.bold = is_bold
+            run.font.name = "Calibri"
+            run.font.size = Pt(10)
+            run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
+            run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")
+
+
 def main() -> None:
     document = Document(TEMPLATE_PATH)
     if len(document.tables) < 3:
@@ -212,7 +259,10 @@ def main() -> None:
     update_product_table(document.tables[1])
     update_service_table(document.tables[2])
     update_tax_labels(document)
+    update_tax_breakdowns(document)
     remove_service_type_line(document)
+    update_roundoff_line(document)
+    update_shipping_address_fields(document)
     document.save(TEMPLATE_PATH)
     print(f"Updated {TEMPLATE_PATH}")
 
