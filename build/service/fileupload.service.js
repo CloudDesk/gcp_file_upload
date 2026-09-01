@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx.js";
 import { REVO_COST_ESTIMATION_BUCKET, REVO_PO_BUCKET, REVO_PR_BUCKET, REVO_PRODUCT_INVOICE_BUCKET, REVO_SERVICE_INVOICE_BUCKET } from "../utils/config.js";
+import { renderInStoreInvoicePdf } from "./inStoreInvoicePdf.service.js";
 const parseAddressSnapshot = (value) => {
     if (!value)
         return null;
@@ -93,13 +94,24 @@ export const fileUploadService = {
                 if (hasManualItems) {
                     template = "invoice/revoinvoicerental.docx";
                 }
-                // bucketname = "revo_product_invoice";
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
             }
             else if (templateType === "productinvoice-instore") {
-                template = "invoice/revoinvoiceproductinstore.docx";
+                // template = "invoice/revoinvoiceproductinstore.docx";
                 // bucketname = "revo_product_invoice";
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+                if (typeof uploadData[0].invoicedata === "string") {
+                    uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+                }
+                prepareInvoiceShippingFields(uploadData[0]);
+                const fileBuffer = await renderInStoreInvoicePdf(uploadData[0]);
+                const invoiceReference = String(uploadData[0]?.invoicenumber || uploadData[0]?.id || Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
+                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `${invoiceReference}.pdf`, fileBuffer);
+                if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+                    throw new Error(uploadPdfToGcs.error || "In-store invoice upload failed");
+                }
+                uploadData[0].invoiceurl = uploadPdfToGcs.url;
+                return { success: true, data: uploadPdfToGcs, uploadData };
             }
             else if (templateType === "serviceinvoice") {
                 template = "invoice/revoinvoiceservice.docx";
