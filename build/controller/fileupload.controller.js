@@ -93,6 +93,12 @@ export const fileUploadController = {
                     reply.status(404).send(error.message);
                 }
             }
+            else if (uploadResult.success &&
+                (templateType === "storequotation-instore" || templateType === "quotation-instore")) {
+                request.body = uploadResult.uploadData;
+                const quoteUrl = request.body?.[0]?.quoteurl || uploadResult?.data?.url;
+                reply.send(quoteUrl);
+            }
             else if (uploadResult.success && templateType === "serviceinvoice") {
                 request.body = uploadResult.uploadData;
                 let data = {

@@ -91,14 +91,14 @@ export const fileUploadService = {
                 }
                 prepareInvoiceShippingFields(uploadData[0]);
                 const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item) => item.type === "manual" || item.type === "manualstore");
-                if (hasManualItems) {
+                if (hasManualItems ||
+                    uploadData[0]?.invoicefor === "rental" ||
+                    uploadData[0]?.invoicedata?.ordername === "rental") {
                     template = "invoice/revoinvoicerental.docx";
                 }
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
             }
             else if (templateType === "productinvoice-instore") {
-                // template = "invoice/revoinvoiceproductinstore.docx";
-                // bucketname = "revo_product_invoice";
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
                 if (typeof uploadData[0].invoicedata === "string") {
                     uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
@@ -111,6 +111,33 @@ export const fileUploadService = {
                     throw new Error(uploadPdfToGcs.error || "In-store invoice upload failed");
                 }
                 uploadData[0].invoiceurl = uploadPdfToGcs.url;
+                return { success: true, data: uploadPdfToGcs, uploadData };
+            }
+            else if (templateType === "storequotation-instore" ||
+                templateType === "quotation-instore") {
+                bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+                if (typeof uploadData[0].invoicedata === "string") {
+                    uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+                }
+                if (typeof uploadData[0].quotationdata === "string") {
+                    uploadData[0].quotationdata = JSON.parse(uploadData[0].quotationdata);
+                }
+                prepareInvoiceShippingFields(uploadData[0]);
+                const fileBuffer = await renderInStoreInvoicePdf(uploadData[0], {
+                    documentType: "quotation",
+                    title: "QUOTATION",
+                    numberLabel: "QUOTATION NO",
+                    dateLabel: "QUOTATION DATE",
+                });
+                const quoteReference = String(uploadData[0]?.quotationnumber ||
+                    uploadData[0]?.invoicenumber ||
+                    uploadData[0]?.id ||
+                    Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
+                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `QUOTATION-${quoteReference}.pdf`, fileBuffer);
+                if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+                    throw new Error(uploadPdfToGcs.error || "In-store quotation upload failed");
+                }
+                uploadData[0].quoteurl = uploadPdfToGcs.url;
                 return { success: true, data: uploadPdfToGcs, uploadData };
             }
             else if (templateType === "serviceinvoice") {

@@ -1,186 +1,144 @@
 import fs from "fs";
 import path from "path";
-
-const escapeHtml = (value: any) =>
-  String(value ?? "")
+const escapeHtml = (value) => String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
-
-const parseJsonObject = (value: any) => {
-  if (!value) return {};
-  if (typeof value === "object" && !Array.isArray(value)) return value;
-  try {
-    const parsed = JSON.parse(String(value));
-    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
-      ? parsed
-      : {};
-  } catch {
-    return {};
-  }
+const parseJsonObject = (value) => {
+    if (!value)
+        return {};
+    if (typeof value === "object" && !Array.isArray(value))
+        return value;
+    try {
+        const parsed = JSON.parse(String(value));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed
+            : {};
+    }
+    catch {
+        return {};
+    }
 };
-
-const firstText = (...values: any[]) => {
-  for (const value of values) {
-    const text = String(value ?? "").trim();
-    if (text) return text;
-  }
-  return "";
+const firstText = (...values) => {
+    for (const value of values) {
+        const text = String(value ?? "").trim();
+        if (text)
+            return text;
+    }
+    return "";
 };
-
-const numericValue = (value: any) => {
-  const parsed = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
-  return Number.isFinite(parsed) ? parsed : 0;
+const numericValue = (value) => {
+    const parsed = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
 };
-
 // Formats any raw amount (number, "₹1234", "1,234.5", etc.) into the
 // Indian-locale grouped format with a fixed 2-decimal-place amount,
 // e.g. 102750 -> "1,02,750.00", 9247.5 -> "9,247.50".
-const formatAmount = (value: any) =>
-  numericValue(value).toLocaleString("en-IN", {
+const formatAmount = (value) => numericValue(value).toLocaleString("en-IN", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  });
-
-const percentageValue = (value: any) => {
-  const parsed = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
-  return Number.isFinite(parsed) ? parsed : 0;
+});
+const percentageValue = (value) => {
+    const parsed = Number(String(value ?? "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
 };
-
-const formatRate = (value: number) =>
-  Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
-
-const formatAddress = (address: any) =>
-  address
+const formatRate = (value) => Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/0+$/, "").replace(/\.$/, "");
+const formatAddress = (address) => address
     ? [
-      address.doornumber,
-      address.address,
-      address.landmark,
-      address.city,
-      address.state,
-      address.pincode,
+        address.doornumber,
+        address.address,
+        address.landmark,
+        address.city,
+        address.state,
+        address.pincode,
     ]
-      .map((part) => String(part ?? "").trim())
-      .filter(Boolean)
-      .join(", ")
+        .map((part) => String(part ?? "").trim())
+        .filter(Boolean)
+        .join(", ")
     : "";
-
-const formatInvoiceDate = (value: any) => {
-  if (!value) return "";
-  const textValue = String(value).trim();
-  if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(textValue)) {
-    return textValue.replace(/\//g, "-");
-  }
-
-  const numeric = Number(textValue);
-  const date = Number.isFinite(numeric)
-    ? new Date(numeric > 10_000_000_000 ? numeric : numeric * 1000)
-    : new Date(textValue);
-  if (Number.isNaN(date.getTime())) return textValue;
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: "Asia/Kolkata",
-  })
-    .format(date)
-    .replace(/\//g, "-");
+const formatInvoiceDate = (value) => {
+    if (!value)
+        return "";
+    const textValue = String(value).trim();
+    if (/^\d{1,2}[-/]\d{1,2}[-/]\d{4}$/.test(textValue)) {
+        return textValue.replace(/\//g, "-");
+    }
+    const numeric = Number(textValue);
+    const date = Number.isFinite(numeric)
+        ? new Date(numeric > 10000000000 ? numeric : numeric * 1000)
+        : new Date(textValue);
+    if (Number.isNaN(date.getTime()))
+        return textValue;
+    return new Intl.DateTimeFormat("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+    })
+        .format(date)
+        .replace(/\//g, "-");
 };
-
-const assetDataUri = (filename: string, mimeType: string) => {
-  const assetPath = path.resolve(process.cwd(), "asset", filename);
-  const bytes = fs.readFileSync(assetPath);
-  return `data:${mimeType};base64,${bytes.toString("base64")}`;
+const assetDataUri = (filename, mimeType) => {
+    const assetPath = path.resolve(process.cwd(), "asset", filename);
+    const bytes = fs.readFileSync(assetPath);
+    return `data:${mimeType};base64,${bytes.toString("base64")}`;
 };
-
-const companyPanFromGstin = (gstin: string) =>
-  /^[0-9A-Z]{15}$/i.test(gstin) ? gstin.slice(2, 12).toUpperCase() : "";
-
+const companyPanFromGstin = (gstin) => /^[0-9A-Z]{15}$/i.test(gstin) ? gstin.slice(2, 12).toUpperCase() : "";
 // Normalizes state strings for comparison ("Tamil Nadu" === "tamil  nadu").
-const normalizeForCompare = (value: any) =>
-  String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
-
-export interface DocumentRenderOptions {
-  documentType?: "invoice" | "quotation";
-  title?: string;
-  numberLabel?: string;
-  dateLabel?: string;
-}
-
-export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOptions = {}) => {
-  const invoiceData = parseJsonObject(invoice?.invoicedata ?? invoice?.quotationdata);
-  const billingAddress = parseJsonObject(invoice?.billingaddresssnapshot);
-  const items = Array.isArray(invoiceData?.items)
-    ? invoiceData.items
-    : Array.isArray(invoice?.itemdata)
-      ? invoice.itemdata
-      : [];
-  const logo = assetDataUri("Teqit_New.png", "image/png");
-  const signature = assetDataUri("bilal_esign.png", "image/jpeg");
-
-  const isQuotation =
-    options.documentType === "quotation" ||
-    Boolean(invoice?.quotationnumber) ||
-    String(invoice?.quotationtype ?? "").trim().length > 0;
-
-  const docTitle = options.title || (isQuotation ? "QUOTATION" : "TAX INVOICE");
-  const docNumberLabel = options.numberLabel || (isQuotation ? "QUOTATION NO" : "INVOICE NO");
-  const docDateLabel = options.dateLabel || (isQuotation ? "QUOTATION DATE" : "DATE");
-
-  const docNumber = firstText(
-    invoice?.quotationnumber,
-    invoice?.invoicenumber,
-    invoice?.id ? `#${invoice.id}` : ""
-  );
-
-  const docDate = formatInvoiceDate(
-    invoice?.quotationdate ?? invoice?.invoicedate ?? invoice?.createddate
-  );
-
-  const companyName = firstText(invoice?.companyname, "Rev0365 Global Private Limited (TEQIT)");
-  const companyAddress = firstText(invoice?.companyaddress, "Chennai");
-  const companyGstin = firstText(invoice?.gstnumber, "23ASDFM0125PAZ1");
-  const companyPan = firstText(invoice?.companypan, companyPanFromGstin(companyGstin), "ASDFM0125P");
-  const odAccountNumber = firstText(invoice?.odaccountnumber, "00000044015545872");
-  const ifscCode = firstText(invoice?.ifsc, "SBIN0013241");
-  const branch = firstText(invoice?.branch, "SBI Egmore");
-  const customerName = firstText(billingAddress?.name, invoice?.customername);
-  const customerAddress = firstText(formatAddress(billingAddress), invoice?.customeraddress);
-  const customerPhone = firstText(
-    billingAddress?.mobilenumber,
-    invoice?.customerphonenumber,
-    invoice?.customermobilenumber,
-  );
-  const customerGstin = firstText(invoice?.customergstnumber);
-
-  // Place of supply: if the supply state matches the billing address state,
-  // show "Same as billing" (matches the master reference) instead of
-  // repeating the state name.
-  const suppliedPlaceState = firstText(invoiceData?.placeofsupply, invoice?.customertaxstate);
-  const billingState = firstText(billingAddress?.state);
-  const placeOfSupply =
-    suppliedPlaceState && billingState &&
-      normalizeForCompare(suppliedPlaceState) === normalizeForCompare(billingState)
-      ? "Same as billing"
-      : firstText(suppliedPlaceState, billingState, "Same as billing");
-
-  const totalTaxRate = percentageValue(items[0]?.taxpercent ?? invoiceData?.tax);
-  const taxMode = firstText(invoiceData?.taxmode).toLowerCase();
-  const isIgst = taxMode === "igst" || numericValue(invoiceData?.igst) > 0;
-  const firstTaxLabel = isIgst
-    ? `ADD IGST ${formatRate(totalTaxRate)}%`
-    : `ADD CGST ${formatRate(totalTaxRate / 2)}%`;
-  const secondTaxLabel = `ADD SGST ${formatRate(totalTaxRate / 2)}%`;
-  const firstTaxAmount = isIgst ? invoiceData?.igst : invoiceData?.cgst;
-  const secondTaxAmount = invoiceData?.sgst;
-  const roundOffAmount = numericValue(invoiceData?.roundoffamount);
-
-  const itemRows = items.length
-    ? items
-      .map(
-        (item: any) => `
+const normalizeForCompare = (value) => String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ");
+export const buildInStoreInvoiceHtml = (invoice, options = {}) => {
+    const invoiceData = parseJsonObject(invoice?.invoicedata ?? invoice?.quotationdata);
+    const billingAddress = parseJsonObject(invoice?.billingaddresssnapshot);
+    const items = Array.isArray(invoiceData?.items)
+        ? invoiceData.items
+        : Array.isArray(invoice?.itemdata)
+            ? invoice.itemdata
+            : [];
+    const logo = assetDataUri("Teqit_New.png", "image/png");
+    const signature = assetDataUri("bilal_esign.png", "image/jpeg");
+    const isQuotation = options.documentType === "quotation" ||
+        Boolean(invoice?.quotationnumber) ||
+        String(invoice?.quotationtype ?? "").trim().length > 0;
+    const docTitle = options.title || (isQuotation ? "QUOTATION" : "TAX INVOICE");
+    const docNumberLabel = options.numberLabel || (isQuotation ? "QUOTATION NO" : "INVOICE NO");
+    const docDateLabel = options.dateLabel || (isQuotation ? "QUOTATION DATE" : "DATE");
+    const docNumber = firstText(invoice?.quotationnumber, invoice?.invoicenumber, invoice?.id ? `#${invoice.id}` : "");
+    const docDate = formatInvoiceDate(invoice?.quotationdate ?? invoice?.invoicedate ?? invoice?.createddate);
+    const companyName = firstText(invoice?.companyname, "Rev0365 Global Private Limited (TEQIT)");
+    const companyAddress = firstText(invoice?.companyaddress, "Chennai");
+    const companyGstin = firstText(invoice?.gstnumber, "23ASDFM0125PAZ1");
+    const companyPan = firstText(invoice?.companypan, companyPanFromGstin(companyGstin), "ASDFM0125P");
+    const odAccountNumber = firstText(invoice?.odaccountnumber, "00000044015545872");
+    const ifscCode = firstText(invoice?.ifsc, "SBIN0013241");
+    const branch = firstText(invoice?.branch, "SBI Egmore");
+    const customerName = firstText(billingAddress?.name, invoice?.customername);
+    const customerAddress = firstText(formatAddress(billingAddress), invoice?.customeraddress);
+    const customerPhone = firstText(billingAddress?.mobilenumber, invoice?.customerphonenumber, invoice?.customermobilenumber);
+    const customerGstin = firstText(invoice?.customergstnumber);
+    // Place of supply: if the supply state matches the billing address state,
+    // show "Same as billing" (matches the master reference) instead of
+    // repeating the state name.
+    const suppliedPlaceState = firstText(invoiceData?.placeofsupply, invoice?.customertaxstate);
+    const billingState = firstText(billingAddress?.state);
+    const placeOfSupply = suppliedPlaceState && billingState &&
+        normalizeForCompare(suppliedPlaceState) === normalizeForCompare(billingState)
+        ? "Same as billing"
+        : firstText(suppliedPlaceState, billingState, "Same as billing");
+    const totalTaxRate = percentageValue(items[0]?.taxpercent ?? invoiceData?.tax);
+    const taxMode = firstText(invoiceData?.taxmode).toLowerCase();
+    const isIgst = taxMode === "igst" || numericValue(invoiceData?.igst) > 0;
+    const firstTaxLabel = isIgst
+        ? `ADD IGST ${formatRate(totalTaxRate)}%`
+        : `ADD CGST ${formatRate(totalTaxRate / 2)}%`;
+    const secondTaxLabel = `ADD SGST ${formatRate(totalTaxRate / 2)}%`;
+    const firstTaxAmount = isIgst ? invoiceData?.igst : invoiceData?.cgst;
+    const secondTaxAmount = invoiceData?.sgst;
+    const roundOffAmount = numericValue(invoiceData?.roundoffamount);
+    const itemRows = items.length
+        ? items
+            .map((item) => `
             <tr class="item-row">
               <td>
                 <strong>${escapeHtml(firstText(item?.name, item?.description, "Product"))}</strong>
@@ -188,27 +146,22 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
               </td>
               <td class="center">${escapeHtml(firstText(item?.hsncode, "-"))}</td>
               <td class="money-cell"><div class="money"><span>₹</span><span>${escapeHtml(formatAmount(item?.totalamount))}</span></div></td>
-            </tr>`,
-      )
-      .join("")
-    : `<tr class="item-row"><td>No invoice items</td><td class="center">-</td><td class="money-cell"><div class="money"><span>₹</span><span>0.00</span></div></td></tr>`;
-
-  const taxRows = `
+            </tr>`)
+            .join("")
+        : `<tr class="item-row"><td>No invoice items</td><td class="center">-</td><td class="money-cell"><div class="money"><span>₹</span><span>0.00</span></div></td></tr>`;
+    const taxRows = `
     <div class="summary-row">
       <span>${escapeHtml(firstTaxLabel)}</span>
       <span></span>
       <span class="money"><span>₹</span><strong>${escapeHtml(formatAmount(firstTaxAmount))}</strong></span>
     </div>
     ${isIgst
-      ? ""
-      : `<div class="summary-row"><span>${escapeHtml(secondTaxLabel)}</span><span></span><span class="money"><span>₹</span><strong>${escapeHtml(formatAmount(secondTaxAmount))}</strong></span></div>`
-    }
+        ? ""
+        : `<div class="summary-row"><span>${escapeHtml(secondTaxLabel)}</span><span></span><span class="money"><span>₹</span><strong>${escapeHtml(formatAmount(secondTaxAmount))}</strong></span></div>`}
     ${roundOffAmount === 0
-      ? ""
-      : `<div class="summary-row"><span>ROUND OFF</span><span></span><span class="money"><span>₹</span><strong>${escapeHtml(formatAmount(invoiceData?.roundoffamount))}</strong></span></div>`
-    }`;
-
-  return `<!doctype html>
+        ? ""
+        : `<div class="summary-row"><span>ROUND OFF</span><span></span><span class="money"><span>₹</span><strong>${escapeHtml(formatAmount(invoiceData?.roundoffamount))}</strong></span></div>`}`;
+    return `<!doctype html>
   <html lang="en">
     <head>
       <meta charset="utf-8" />
@@ -326,71 +279,63 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
     </body>
   </html>`;
 };
-
 const findLocalChromePath = () => {
-  const candidates = [
-    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    "/Applications/Chromium.app/Contents/MacOS/Chromium",
-    "/usr/bin/google-chrome",
-    "/usr/bin/google-chrome-stable",
-    "/usr/bin/chromium-browser",
-    "/usr/bin/chromium",
-  ];
-  return candidates.find((candidate) => fs.existsSync(candidate)) || "";
+    const candidates = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium",
+    ];
+    return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 };
-
-export const renderInStoreInvoicePdf = async (
-  invoice: any,
-  options: DocumentRenderOptions = {}
-): Promise<Buffer> => {
-  // @ts-ignore
-  const puppeteer = await import("puppeteer-core");
-  let browser: any;
-
-  try {
+export const renderInStoreInvoicePdf = async (invoice, options = {}) => {
+    // @ts-ignore
+    const puppeteer = await import("puppeteer-core");
+    let browser;
     try {
-      // @ts-ignore
-      const chromium = await import("@sparticuz/chromium");
-      browser = await puppeteer.default.launch({
-        args: chromium.default.args,
-        defaultViewport: { width: 1280, height: 900 },
-        executablePath: await chromium.default.executablePath(),
-        headless: true,
-      });
-    } catch {
-      const executablePath = findLocalChromePath();
-      if (!executablePath) {
-        throw new Error("No Chrome/Chromium executable is available for in-store invoice PDF generation.");
-      }
-      browser = await puppeteer.default.launch({
-        executablePath,
-        headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      });
+        try {
+            // @ts-ignore
+            const chromium = await import("@sparticuz/chromium");
+            browser = await puppeteer.default.launch({
+                args: chromium.default.args,
+                defaultViewport: { width: 1280, height: 900 },
+                executablePath: await chromium.default.executablePath(),
+                headless: true,
+            });
+        }
+        catch {
+            const executablePath = findLocalChromePath();
+            if (!executablePath) {
+                throw new Error("No Chrome/Chromium executable is available for in-store invoice PDF generation.");
+            }
+            browser = await puppeteer.default.launch({
+                executablePath,
+                headless: true,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"],
+            });
+        }
+        const page = await browser.newPage();
+        await page.setContent(buildInStoreInvoiceHtml(invoice, options), { waitUntil: "networkidle0" });
+        await page.evaluate(async () => {
+            await Promise.all(Array.from(document.images).map((image) => image.complete
+                ? Promise.resolve()
+                : new Promise((resolve) => {
+                    image.addEventListener("load", () => resolve(), { once: true });
+                    image.addEventListener("error", () => resolve(), { once: true });
+                })));
+        });
+        const pdf = await page.pdf({
+            format: "A5",
+            printBackground: true,
+            preferCSSPageSize: true,
+        });
+        return Buffer.from(pdf);
     }
-
-    const page = await browser.newPage();
-    await page.setContent(buildInStoreInvoiceHtml(invoice, options), { waitUntil: "networkidle0" });
-    await page.evaluate(async () => {
-      await Promise.all(
-        Array.from(document.images).map(
-          (image) =>
-            image.complete
-              ? Promise.resolve()
-              : new Promise<void>((resolve) => {
-                image.addEventListener("load", () => resolve(), { once: true });
-                image.addEventListener("error", () => resolve(), { once: true });
-              }),
-        ),
-      );
-    });
-    const pdf = await page.pdf({
-      format: "A5",
-      printBackground: true,
-      preferCSSPageSize: true,
-    });
-    return Buffer.from(pdf);
-  } finally {
-    if (browser) await browser.close();
-  }
+    finally {
+        if (browser)
+            await browser.close();
+    }
 };
+//# sourceMappingURL=inStoreInvoicePdf.service.js.map
