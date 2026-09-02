@@ -45,6 +45,16 @@ const resolveSofficeExecutable = () => {
     return installedPath;
   }
 
+  if (process.platform === "darwin") {
+    const macCandidates = [
+      "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+      "/usr/local/bin/soffice",
+      "/opt/homebrew/bin/soffice",
+    ];
+    const macInstalled = macCandidates.find((c) => fs.existsSync(c));
+    if (macInstalled) return macInstalled;
+  }
+
   return "soffice";
 };
 

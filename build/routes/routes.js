@@ -11,6 +11,8 @@ import { revoTicketController } from "../controller/revoTicketController.js";
 import { fileUploadController } from "../controller/fileupload.controller.js";
 import { bannerImageController } from "../controller/revoBanner.controller.js";
 import { blogImageController } from "../controller/revoBlog.controller.js";
+import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
+import { FILE_UPLOAD_INTERNAL_SECRET, REVO_PRODUCT_INVOICE_BUCKET } from "../utils/config.js";
 export const pdfroute = (fastify, opts, done) => {
     fastify.get("/", async (req, reply) => {
         return { hello: "world" };
@@ -23,6 +25,25 @@ export const pdfroute = (fastify, opts, done) => {
         catch (error) {
             return error;
         }
+    });
+    fastify.post("/delivery-challans/pdf", async (req, reply) => {
+        const providedSecret = req.headers["x-internal-file-secret"];
+        if (FILE_UPLOAD_INTERNAL_SECRET && String(providedSecret || "") !== String(FILE_UPLOAD_INTERNAL_SECRET)) {
+            return reply.status(401).send({ success: false, message: "Unauthorized file upload." });
+        }
+        const file = await req.file({ limits: { files: 1, fileSize: 15 * 1024 * 1024 } });
+        if (!file || file.mimetype !== "application/pdf") {
+            return reply.status(400).send({ success: false, message: "A PDF file is required." });
+        }
+        const requestedName = String(req.query?.filename || file.filename || "delivery-challan.pdf");
+        const safeName = requestedName.replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/-+/g, "-");
+        const buffer = await file.toBuffer();
+        const bucket = REVO_PRODUCT_INVOICE_BUCKET || "revo_product_invoice-dev";
+        const result = await uploadFilesToGcs2(bucket, safeName, buffer, "delivery-challans");
+        if (!result.success || !result.url) {
+            return reply.status(500).send({ success: false, message: "Delivery Challan PDF upload failed." });
+        }
+        return reply.send({ success: true, data: { ...result, url: `${result.url}?v=${Date.now()}` } });
     });
     fastify.post("/file-upload/:organisation", async (req, reply) => {
         try {

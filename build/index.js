@@ -42,15 +42,15 @@ fastify.setNotFoundHandler((request, reply) => {
 // Server listening configuration
 const start = async () => {
     try {
-        await fastify.listen({
+        const address = await fastify.listen({
             port: 4500,
             host: "0.0.0.0",
             listen: true,
         });
-        console.log(`Server is running on ${fastify.server.address().port}`);
+        console.log(`File-upload server is running at ${address}`);
     }
     catch (err) {
-        fastify.log.error(err);
+        console.error("File-upload server failed to start:", err?.message || err);
         process.exit(1);
     }
 };

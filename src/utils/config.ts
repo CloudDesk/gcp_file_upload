@@ -28,6 +28,7 @@ const config = {
   REVO_TICKET_IMAGES_BUCKET: process.env.REVO_TICKET_IMAGES_BUCKET,
   REVO_BANNER_IMAGES_BUCKET: process.env.REVO_BANNER_IMAGES_BUCKET,
   REVO_BLOG_PDF_BUCKET: process.env.REVO_BLOG_PDF_BUCKET,
+  FILE_UPLOAD_INTERNAL_SECRET: process.env.FILE_UPLOAD_INTERNAL_SECRET,
 };
 
 export const { REVO_PRODUCT_IMAGE_API } = config;
@@ -54,3 +55,4 @@ export const { REVO_PR_QUOTES_BUCKET } = config;
 export const { REVO_TICKET_IMAGES_BUCKET } = config;
 export const { REVO_BANNER_IMAGES_BUCKET } = config;
 export const { REVO_BLOG_PDF_BUCKET } = config;
+export const { FILE_UPLOAD_INTERNAL_SECRET } = config;

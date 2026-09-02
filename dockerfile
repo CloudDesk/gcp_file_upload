@@ -29,10 +29,14 @@
 # Use Node.js 20 as base image
 FROM node:20
 
-# Install LibreOffice for document conversion, fonts for rupee rendering,
-# and Poppler tools used to detect blank trailing PDF pages.
+# Install document-conversion tools and a system Chromium fallback for
+# Puppeteer PDF generation in the hosted container. The application prefers
+# @sparticuz/chromium and falls back to /usr/bin/chromium when necessary.
 RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    chromium \
     fontconfig \
+    fonts-liberation \
     fonts-noto-core \
     libreoffice \
     poppler-utils \
@@ -47,8 +51,10 @@ WORKDIR /app
 COPY package*.json ./
 
 
-# Install dependencies (before copying source)
-RUN npm ci --omit=dev
+# Install production dependencies, including puppeteer-core and
+# @sparticuz/chromium, before copying the application source.
+RUN npm ci --omit=dev \
+    && node -e "require.resolve('puppeteer-core'); require.resolve('@sparticuz/chromium')"
 
 # Copy app source
 COPY . .

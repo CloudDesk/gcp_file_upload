@@ -2,6 +2,56 @@ import fs from "fs/promises";
 import { uploadFilesToGcs2 } from "../cloudstorge/cloudstorage.js";
 import GenerateDocx from "../docxtemplate/docx.js";
 import { REVO_COST_ESTIMATION_BUCKET, REVO_PO_BUCKET, REVO_PR_BUCKET, REVO_PRODUCT_INVOICE_BUCKET, REVO_SERVICE_INVOICE_BUCKET } from "../utils/config.js";
+import { renderInStoreInvoicePdf } from "./inStoreInvoicePdf.service.js";
+
+const parseAddressSnapshot = (value: any) => {
+  if (!value) return null;
+  if (typeof value === "object" && !Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(String(value));
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? parsed
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const formatAddressSnapshot = (address: any) =>
+  address
+    ? [
+      address.doornumber,
+      address.address,
+      address.landmark,
+      address.city,
+      address.state,
+      address.pincode,
+    ]
+      .map((value) => String(value ?? "").trim())
+      .filter(Boolean)
+      .join(", ")
+    : "";
+
+const prepareInvoiceShippingFields = (invoice: any) => {
+  const billingAddress = parseAddressSnapshot(invoice?.billingaddresssnapshot);
+  const shippingAddress = parseAddressSnapshot(invoice?.shippingaddresssnapshot);
+
+  invoice.customername =
+    String(billingAddress?.name || invoice?.customername || "").trim();
+  invoice.customeraddress =
+    formatAddressSnapshot(billingAddress) || invoice?.customeraddress || "";
+  invoice.customerphonenumber =
+    String(billingAddress?.mobilenumber || invoice?.customerphonenumber || "").trim();
+
+  invoice.shippingcustomername =
+    String(shippingAddress?.name || invoice?.customername || "").trim();
+  invoice.shippingcustomeraddress =
+    formatAddressSnapshot(shippingAddress) || invoice?.customeraddress || "";
+  invoice.shippingcustomerphonenumber =
+    String(shippingAddress?.mobilenumber || invoice?.customerphonenumber || "").trim();
+  invoice.shippingcustomergstnumber =
+    String(shippingAddress?.gstnumber || invoice?.customergstnumber || "").trim();
+};
 
 export const fileUploadService = {
   uploadFile: async (request, uploadData, reply) => {
@@ -42,24 +92,79 @@ export const fileUploadService = {
         if (typeof uploadData[0].invoicedata === 'string') {
           uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
         }
+        prepareInvoiceShippingFields(uploadData[0]);
 
         const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item: any) =>
           item.type === "manual" || item.type === "manualstore"
         );
 
-        if (hasManualItems) {
+        if (
+          hasManualItems ||
+          uploadData[0]?.invoicefor === "rental" ||
+          uploadData[0]?.invoicedata?.ordername === "rental"
+        ) {
           template = "invoice/revoinvoicerental.docx";
         }
 
-        // bucketname = "revo_product_invoice";
         bucketname = REVO_PRODUCT_INVOICE_BUCKET;
       } else if (templateType === "productinvoice-instore") {
-        template = "invoice/revoinvoiceproductinstore.docx";
-        // bucketname = "revo_product_invoice";
         bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+        if (typeof uploadData[0].invoicedata === "string") {
+          uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+        }
+        prepareInvoiceShippingFields(uploadData[0]);
+        const fileBuffer = await renderInStoreInvoicePdf(uploadData[0]);
+        const invoiceReference = String(
+          uploadData[0]?.invoicenumber || uploadData[0]?.id || Date.now()
+        ).replace(/[^a-zA-Z0-9_-]+/g, "-");
+        const uploadPdfToGcs = await uploadFilesToGcs2(
+          bucketname,
+          `${invoiceReference}.pdf`,
+          fileBuffer,
+        );
+        if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+          throw new Error(uploadPdfToGcs.error || "In-store invoice upload failed");
+        }
+        uploadData[0].invoiceurl = uploadPdfToGcs.url;
+        return { success: true, data: uploadPdfToGcs, uploadData };
+      } else if (
+        templateType === "storequotation-instore" ||
+        templateType === "quotation-instore"
+      ) {
+        bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+        if (typeof uploadData[0].invoicedata === "string") {
+          uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+        }
+        if (typeof uploadData[0].quotationdata === "string") {
+          uploadData[0].quotationdata = JSON.parse(uploadData[0].quotationdata);
+        }
+        prepareInvoiceShippingFields(uploadData[0]);
+        const fileBuffer = await renderInStoreInvoicePdf(uploadData[0], {
+          documentType: "quotation",
+          title: "QUOTATION",
+          numberLabel: "QUOTATION NO",
+          dateLabel: "QUOTATION DATE",
+        });
+        const quoteReference = String(
+          uploadData[0]?.quotationnumber ||
+            uploadData[0]?.invoicenumber ||
+            uploadData[0]?.id ||
+            Date.now()
+        ).replace(/[^a-zA-Z0-9_-]+/g, "-");
+        const uploadPdfToGcs = await uploadFilesToGcs2(
+          bucketname,
+          `QUOTATION-${quoteReference}.pdf`,
+          fileBuffer,
+        );
+        if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+          throw new Error(uploadPdfToGcs.error || "In-store quotation upload failed");
+        }
+        uploadData[0].quoteurl = uploadPdfToGcs.url;
+        return { success: true, data: uploadPdfToGcs, uploadData };
       }
       else if (templateType === "serviceinvoice") {
         template = "invoice/revoinvoiceservice.docx";
+        prepareInvoiceShippingFields(uploadData[0]);
         // bucketname = "revo_service_invoice";
         bucketname = REVO_SERVICE_INVOICE_BUCKET;
       }
