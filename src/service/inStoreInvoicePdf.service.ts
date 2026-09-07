@@ -250,7 +250,11 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         .money-cell { vertical-align: middle; }
         .money { display: flex; justify-content: space-between; gap: 3mm; text-align: right; white-space: nowrap; }
         .closing-section { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
-        .summary-space, .summary { background-image: linear-gradient(to right, transparent calc(44% - .65px), #111 calc(44% - .65px), #111 calc(44% + .65px), transparent calc(44% + .65px)), linear-gradient(to right, transparent calc(65% - .65px), #111 calc(65% - .65px), #111 calc(65% + .65px), transparent calc(65% + .65px)); }
+        .summary-space, .summary { position: relative; }
+        .summary-space::before, .summary::before,
+        .summary-space::after, .summary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.3px solid #111; pointer-events: none; }
+        .summary-space::before, .summary::before { left: 44%; }
+        .summary-space::after, .summary::after { left: 65%; }
         .summary-space { flex: 1 1 0; min-height: 0; }
         .summary { min-height: 20mm; border-bottom: 1.3px solid #111; padding: 1.2mm 1mm; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
         .tax-rows { margin-top: auto; }
@@ -328,13 +332,29 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
 };
 
 const findLocalChromePath = () => {
+  const configuredPath = String(
+    process.env.CHROME_EXECUTABLE_PATH ||
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    "",
+  ).trim();
+  const windowsRoots = [
+    process.env.PROGRAMFILES,
+    process.env["PROGRAMFILES(X86)"],
+    process.env.LOCALAPPDATA,
+  ].filter((value): value is string => Boolean(value));
   const candidates = [
+    configuredPath,
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/usr/bin/google-chrome",
     "/usr/bin/google-chrome-stable",
     "/usr/bin/chromium-browser",
     "/usr/bin/chromium",
+    ...windowsRoots.flatMap((root) => [
+      path.join(root, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(root, "Chromium", "Application", "chrome.exe"),
+      path.join(root, "Microsoft", "Edge", "Application", "msedge.exe"),
+    ]),
   ];
   return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 };
