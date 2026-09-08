@@ -188,12 +188,15 @@ export const buildInStoreInvoiceHtml = (invoice, options = {}) => {
         .meta td { min-height: 37mm; height: 37mm; }
         .customer-cell { padding: 0; }
         .customer-layout { min-height: 37mm; height: 100%; display: flex; flex-direction: column; }
-        .customer-name { flex: 0 0 auto; width: 100%; border-bottom: 1.5px solid #111; font-weight: 700; padding: 1.3mm 1mm; }
+        .customer-name { position: relative; flex: 0 0 auto; width: 100%; font-weight: 700; padding: 1.3mm 1mm; }
+        .customer-name::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: #111; }
         .customer-details { flex: 1 1 auto; padding: 1.3mm 1mm; }
         .customer-address { white-space: pre-line; line-height: 1.35; }
-        .customer-gstin { flex: 0 0 auto; width: 100%; border-top: 1.5px solid #111; padding: 1.3mm 1mm; text-decoration: underline; }
+        .customer-gstin { position: relative; flex: 0 0 auto; width: 100%; padding: 1.3mm 1mm; text-decoration: underline; }
+        .customer-gstin::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1.5px; background: #111; }
         .center { text-align: center; vertical-align: middle !important; }
         .invoice-value { text-align: center; vertical-align: middle !important; font-weight: 700; font-size: 13px; }
+        .items { border-collapse: separate; border-spacing: 0; }
         .items thead { display: table-header-group; }
         .items th { height: 9mm; font-size: 14px; text-align: left; vertical-align: middle; }
         .items th:nth-child(2), .items th:nth-child(3) { text-align: right; }
