@@ -235,10 +235,10 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         .meta td { min-height: 37mm; height: 37mm; }
         .customer-cell { padding: 0; }
         .customer-layout { min-height: 37mm; height: 100%; display: flex; flex-direction: column; }
-        .customer-name { flex: 0 0 auto; border-bottom: 1.3px solid #111; font-weight: 700; padding: 1.3mm 1mm; }
+        .customer-name { flex: 0 0 auto; width: 100%; border-bottom: 1.5px solid #111; font-weight: 700; padding: 1.3mm 1mm; }
         .customer-details { flex: 1 1 auto; padding: 1.3mm 1mm; }
         .customer-address { white-space: pre-line; line-height: 1.35; }
-        .customer-gstin { flex: 0 0 auto; border-top: 1.3px solid #111; padding: 1.3mm 1mm; text-decoration: underline; }
+        .customer-gstin { flex: 0 0 auto; width: 100%; border-top: 1.5px solid #111; padding: 1.3mm 1mm; text-decoration: underline; }
         .center { text-align: center; vertical-align: middle !important; }
         .invoice-value { text-align: center; vertical-align: middle !important; font-weight: 700; font-size: 13px; }
         .items thead { display: table-header-group; }
@@ -246,6 +246,7 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         .items th:nth-child(2), .items th:nth-child(3) { text-align: right; }
         .item-row { break-inside: avoid; page-break-inside: avoid; }
         .item-row td { padding-top: 2mm; padding-bottom: 2mm; }
+        .items tbody tr:last-child td { border-bottom: 0; }
         .item-detail { margin-top: 0.8mm; color: #333; font-size: 10.5px; }
         .money-cell { vertical-align: middle; }
         .money { display: flex; justify-content: space-between; gap: 3mm; text-align: right; white-space: nowrap; }

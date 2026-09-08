@@ -49,6 +49,44 @@ const prepareInvoiceShippingFields = (invoice) => {
     invoice.shippingcustomergstnumber =
         String(shippingAddress?.gstnumber || invoice?.customergstnumber || "").trim();
 };
+const parseInvoiceSection = (value) => {
+    if (value && typeof value === "object" && !Array.isArray(value))
+        return value;
+    try {
+        const parsed = JSON.parse(String(value || "{}"));
+        return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+            ? parsed
+            : {};
+    }
+    catch {
+        return {};
+    }
+};
+const getSectionRoundOff = (total) => {
+    const numericTotal = Number(total);
+    if (!Number.isFinite(numericTotal))
+        return "0.00";
+    const adjustment = Math.round((Math.round(numericTotal) - numericTotal + Number.EPSILON) * 100) / 100;
+    return adjustment.toFixed(2);
+};
+const prepareServiceInvoiceRoundOffFields = (invoice) => {
+    const productData = parseInvoiceSection(invoice?.invoicedata);
+    const serviceData = parseInvoiceSection(invoice?.servicedata);
+    productData.roundoffamount = getSectionRoundOff(productData.total);
+    serviceData.roundoffamount = getSectionRoundOff(serviceData.total);
+    invoice.invoicedata = productData;
+    invoice.servicedata = serviceData;
+};
+const hasCustomerGstNumber = (value) => {
+    const normalized = String(value ?? "").trim().toLowerCase();
+    return Boolean(normalized && normalized !== "-" && normalized !== "n/a" && normalized !== "null");
+};
+const prepareServiceInvoiceCustomerGstVisibility = (invoice) => {
+    // customergstnumber is populated only for business customers by both
+    // service-invoice entry points. Use it as the single visibility switch so
+    // billing and shipping never show an empty GST label for non-business users.
+    invoice.showcustomergst = hasCustomerGstNumber(invoice?.customergstnumber);
+};
 export const fileUploadService = {
     uploadFile: async (request, uploadData, reply) => {
         console.log(uploadData, "DATA IS");
@@ -143,6 +181,8 @@ export const fileUploadService = {
             else if (templateType === "serviceinvoice") {
                 template = "invoice/revoinvoiceservice.docx";
                 prepareInvoiceShippingFields(uploadData[0]);
+                prepareServiceInvoiceRoundOffFields(uploadData[0]);
+                prepareServiceInvoiceCustomerGstVisibility(uploadData[0]);
                 // bucketname = "revo_service_invoice";
                 bucketname = REVO_SERVICE_INVOICE_BUCKET;
             }
