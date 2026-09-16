@@ -15,6 +15,10 @@ const templatePath = path.join(
 );
 const outputDirectory = path.join(projectRoot, ".qa", "service-invoice");
 const outputPath = path.join(outputDirectory, "service-invoice-sample.docx");
+const businessOutputPath = path.join(
+  outputDirectory,
+  "service-invoice-business-sample.docx",
+);
 
 const sampleInvoice = {
   invoicenumber: "TEQIT-Invoice-QA",
@@ -27,6 +31,7 @@ const sampleInvoice = {
   customeraddress: "New Vilangudi, Madurai, Tamil Nadu - 625018",
   customerphonenumber: "6765678909",
   customergstnumber: "-",
+  showcustomergst: false,
   shippingcustomername: "Delivery Contact",
   shippingcustomeraddress: "42, Anna Nagar, Chennai, Tamil Nadu - 600040",
   shippingcustomerphonenumber: "9876543210",
@@ -50,7 +55,8 @@ const sampleInvoice = {
       { label: "CGST Amount (9%)", amount: 3600 },
       { label: "SGST Amount (9%)", amount: 3600 },
     ],
-    total: 47200,
+    total: 1163.48,
+    roundoffamount: "-0.48",
   },
   servicedata: {
     items: [
@@ -69,26 +75,38 @@ const sampleInvoice = {
       { label: "CGST Amount (9%)", amount: 900 },
       { label: "SGST Amount (9%)", amount: 900 },
     ],
-    total: 11800,
+    total: 1180.4,
+    roundoffamount: "-0.40",
   },
   servicetype: "Repair",
-  totalorderamount: 59000,
+  productroundoffamount: -0.48,
+  serviceroundoffamount: -0.4,
+  roundoffamount: -0.88,
+  totalorderamount: 2343,
 };
 
 fs.mkdirSync(outputDirectory, { recursive: true });
-const zip = new PizZip(fs.readFileSync(templatePath, "binary"));
-const document = new Docxtemplater(zip, {
-  paragraphLoop: true,
-  linebreaks: true,
-  nullGetter: () => "-",
-});
-document.render(sampleInvoice);
-fs.writeFileSync(
-  outputPath,
-  document.getZip().generate({
+const renderSample = (data, targetPath) => {
+  const zip = new PizZip(fs.readFileSync(templatePath, "binary"));
+  const document = new Docxtemplater(zip, {
+    paragraphLoop: true,
+    linebreaks: true,
+    nullGetter: () => "-",
+  });
+  document.render(data);
+  fs.writeFileSync(targetPath, document.getZip().generate({
     type: "nodebuffer",
     compression: "DEFLATE",
-  }),
-);
+  }));
+};
+
+renderSample(sampleInvoice, outputPath);
+renderSample({
+  ...sampleInvoice,
+  customergstnumber: "33ABCDE1234F1Z5",
+  shippingcustomergstnumber: "33ABCDE1234F1Z5",
+  showcustomergst: true,
+}, businessOutputPath);
 
 console.log(outputPath);
+console.log(businessOutputPath);

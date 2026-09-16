@@ -235,22 +235,30 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         .meta td { min-height: 37mm; height: 37mm; }
         .customer-cell { padding: 0; }
         .customer-layout { min-height: 37mm; height: 100%; display: flex; flex-direction: column; }
-        .customer-name { flex: 0 0 auto; border-bottom: 1.3px solid #111; font-weight: 700; padding: 1.3mm 1mm; }
+        .customer-name { position: relative; flex: 0 0 auto; width: 100%; font-weight: 700; padding: 1.3mm 1mm; }
+        .customer-name::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1.5px; background: #111; }
         .customer-details { flex: 1 1 auto; padding: 1.3mm 1mm; }
         .customer-address { white-space: pre-line; line-height: 1.35; }
-        .customer-gstin { flex: 0 0 auto; border-top: 1.3px solid #111; padding: 1.3mm 1mm; text-decoration: underline; }
+        .customer-gstin { position: relative; flex: 0 0 auto; width: 100%; padding: 1.3mm 1mm; text-decoration: underline; }
+        .customer-gstin::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1.5px; background: #111; }
         .center { text-align: center; vertical-align: middle !important; }
         .invoice-value { text-align: center; vertical-align: middle !important; font-weight: 700; font-size: 13px; }
+        .items { border-collapse: separate; border-spacing: 0; }
         .items thead { display: table-header-group; }
         .items th { height: 9mm; font-size: 14px; text-align: left; vertical-align: middle; }
         .items th:nth-child(2), .items th:nth-child(3) { text-align: right; }
         .item-row { break-inside: avoid; page-break-inside: avoid; }
         .item-row td { padding-top: 2mm; padding-bottom: 2mm; }
+        .items tbody tr:last-child td { border-bottom: 0; }
         .item-detail { margin-top: 0.8mm; color: #333; font-size: 10.5px; }
         .money-cell { vertical-align: middle; }
         .money { display: flex; justify-content: space-between; gap: 3mm; text-align: right; white-space: nowrap; }
         .closing-section { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
-        .summary-space, .summary { background-image: linear-gradient(to right, transparent calc(44% - .65px), #111 calc(44% - .65px), #111 calc(44% + .65px), transparent calc(44% + .65px)), linear-gradient(to right, transparent calc(65% - .65px), #111 calc(65% - .65px), #111 calc(65% + .65px), transparent calc(65% + .65px)); }
+        .summary-space, .summary { position: relative; }
+        .summary-space::before, .summary::before,
+        .summary-space::after, .summary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.3px solid #111; pointer-events: none; }
+        .summary-space::before, .summary::before { left: 44%; }
+        .summary-space::after, .summary::after { left: 65%; }
         .summary-space { flex: 1 1 0; min-height: 0; }
         .summary { min-height: 20mm; border-bottom: 1.3px solid #111; padding: 1.2mm 1mm; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
         .tax-rows { margin-top: auto; }
@@ -328,13 +336,29 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
 };
 
 const findLocalChromePath = () => {
+  const configuredPath = String(
+    process.env.CHROME_EXECUTABLE_PATH ||
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    "",
+  ).trim();
+  const windowsRoots = [
+    process.env.PROGRAMFILES,
+    process.env["PROGRAMFILES(X86)"],
+    process.env.LOCALAPPDATA,
+  ].filter((value): value is string => Boolean(value));
   const candidates = [
+    configuredPath,
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/usr/bin/google-chrome",
     "/usr/bin/google-chrome-stable",
     "/usr/bin/chromium-browser",
     "/usr/bin/chromium",
+    ...windowsRoots.flatMap((root) => [
+      path.join(root, "Google", "Chrome", "Application", "chrome.exe"),
+      path.join(root, "Chromium", "Application", "chrome.exe"),
+      path.join(root, "Microsoft", "Edge", "Application", "msedge.exe"),
+    ]),
   ];
   return candidates.find((candidate) => fs.existsSync(candidate)) || "";
 };

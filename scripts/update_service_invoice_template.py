@@ -218,17 +218,30 @@ def remove_service_type_line(document) -> None:
 
 def update_roundoff_line(document) -> None:
     for paragraph in document.paragraphs:
-        if "Total: {totalorderamount}" not in paragraph.text:
+        text = paragraph.text
+        if "Subtotal (A)" in text and "{#invoicedata}{total}{/}" in text:
+            replacement = (
+                "Round Off: {#invoicedata}{roundoffamount}{/}\n"
+                "Subtotal (A): {#invoicedata}{total}{/}"
+            )
+        elif "Subtotal:" in text and "{#servicedata}{total}{/}" in text:
+            replacement = (
+                "Round Off: {#servicedata}{roundoffamount}{/}\n"
+                "Subtotal: {#servicedata}{total}{/}"
+            )
+        elif "Total: {totalorderamount}" in text:
+            replacement = "Total: {totalorderamount}"
+        else:
             continue
+
         for run in list(paragraph.runs):
             paragraph._p.remove(run._element)
-        run = paragraph.add_run("Round Off: {roundoffamount}\nTotal: {totalorderamount}")
+        run = paragraph.add_run(replacement)
         run.bold = True
         run.font.name = "Calibri"
         run.font.size = Pt(11)
         run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
         run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")
-        return
 
 
 def update_shipping_address_fields(document) -> None:
@@ -240,6 +253,7 @@ def update_shipping_address_fields(document) -> None:
     }
     for index, segments in replacements.items():
         paragraph = document.paragraphs[index]
+        paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
         for run in list(paragraph.runs):
             paragraph._p.remove(run._element)
         for text, is_bold in segments:
@@ -249,6 +263,28 @@ def update_shipping_address_fields(document) -> None:
             run.font.size = Pt(10)
             run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
             run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")
+
+
+def update_customer_gst_visibility(document) -> None:
+    replacements = {
+        "GST: {customergstnumber}": "{#showcustomergst}GST: {customergstnumber}{/}",
+        "GST: {shippingcustomergstnumber}": (
+            "{#showcustomergst}GST: {shippingcustomergstnumber}{/}"
+        ),
+    }
+    for paragraph in document.paragraphs:
+        replacement = replacements.get(paragraph.text.strip())
+        if replacement is None:
+            continue
+        if "shippingcustomergstnumber" in replacement:
+            paragraph.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        for run in list(paragraph.runs):
+            paragraph._p.remove(run._element)
+        run = paragraph.add_run(replacement)
+        run.font.name = "Calibri"
+        run.font.size = Pt(10)
+        run._element.get_or_add_rPr().rFonts.set(qn("w:ascii"), "Calibri")
+        run._element.get_or_add_rPr().rFonts.set(qn("w:hAnsi"), "Calibri")
 
 
 def main() -> None:
@@ -263,6 +299,7 @@ def main() -> None:
     remove_service_type_line(document)
     update_roundoff_line(document)
     update_shipping_address_fields(document)
+    update_customer_gst_visibility(document)
     document.save(TEMPLATE_PATH)
     print(f"Updated {TEMPLATE_PATH}")
 
