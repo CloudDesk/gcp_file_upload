@@ -9,7 +9,7 @@ import GenerateDocx from "../docxtemplate/docx_pdf_conversion.js";
 export namespace docgenService {
   export const insertfileconversiondocgendata = async (
     req: any,
-    reply: any
+    reply: any,
   ) => {
     try {
       console.log(req.body, "req body is");
@@ -28,6 +28,7 @@ export namespace docgenService {
       let filesdata = await req.file();
       const { file, filename } = filesdata;
       let uploadfile = await uploadFileToGcp(filename, file, organisation);
+      console.log("uploadfile");
       reply.send(uploadfile);
     } catch (error) {
       return error;
