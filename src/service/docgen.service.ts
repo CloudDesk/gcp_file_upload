@@ -28,7 +28,6 @@ export namespace docgenService {
       let filesdata = await req.file();
       const { file, filename } = filesdata;
       let uploadfile = await uploadFileToGcp(filename, file, organisation);
-      console.log("uploadfile");
       reply.send(uploadfile);
     } catch (error) {
       return error;
