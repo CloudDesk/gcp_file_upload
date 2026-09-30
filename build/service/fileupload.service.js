@@ -69,11 +69,17 @@ const getSectionRoundOff = (total) => {
     const adjustment = Math.round((Math.round(numericTotal) - numericTotal + Number.EPSILON) * 100) / 100;
     return adjustment.toFixed(2);
 };
+const getSectionPayableAmount = (total) => {
+    const numericTotal = Number(total);
+    return Number.isFinite(numericTotal) ? Math.round(numericTotal) : 0;
+};
 const prepareServiceInvoiceRoundOffFields = (invoice) => {
     const productData = parseInvoiceSection(invoice?.invoicedata);
     const serviceData = parseInvoiceSection(invoice?.servicedata);
     productData.roundoffamount = getSectionRoundOff(productData.total);
+    productData.roundedtotal = getSectionPayableAmount(productData.total);
     serviceData.roundoffamount = getSectionRoundOff(serviceData.total);
+    serviceData.roundedtotal = getSectionPayableAmount(serviceData.total);
     invoice.invoicedata = productData;
     invoice.servicedata = serviceData;
 };
