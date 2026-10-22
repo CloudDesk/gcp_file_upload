@@ -120,6 +120,7 @@ const normalizeForCompare = (value: any) =>
 
 export interface DocumentRenderOptions {
   documentType?: "invoice" | "quotation" | "service" | "estimation";
+  placeOfSupplyText?: string;
   title?: string;
   numberLabel?: string;
   dateLabel?: string;
@@ -343,11 +344,11 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
     showShipTo ? shippingAddress?.state : "",
   );
   const billingState = firstText(billingAddress?.state);
-  const placeOfSupply =
+  const placeOfSupply = firstText(options.placeOfSupplyText) || (
     suppliedPlaceState && billingState &&
       normalizeForCompare(suppliedPlaceState) === normalizeForCompare(billingState)
       ? "Same as billing"
-      : firstText(suppliedPlaceState, billingState, "Same as billing");
+      : firstText(suppliedPlaceState, billingState, "Same as billing"));
 
   // Show the rate in the tax label only when every line shares one rate;
   // the amounts are invoice totals, so a single rate would mislabel a
@@ -528,6 +529,11 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th, td { border-right: 1.3px solid #111; border-bottom: 1.3px solid #111; padding: 1.3mm 1mm; vertical-align: top; overflow-wrap: anywhere; }
         th:last-child, td:last-child { border-right: 0; }
+        /* Paint shared dividers against each section's full width. Cell
+           borders and separately positioned rules round differently in PDF. */
+        .meta, .items, .summary-space, .summary { background-image: linear-gradient(#111, #111), linear-gradient(#111, #111); background-size: 1.3px 100%; background-position: 44% 0, 65% 0; background-repeat: no-repeat; }
+        .meta { border-collapse: separate; border-spacing: 0; }
+        .meta th:nth-child(-n+2), .meta td:nth-child(-n+2), .items th, .items td { border-right: 0; }
         .meta th { height: 10mm; font-size: 14px; line-height: 1.05; text-align: left; vertical-align: middle; }
         .meta th:not(:first-child) { text-align: center; }
         .meta td { min-height: 37mm; height: 37mm; }
@@ -554,23 +560,18 @@ export const buildInStoreInvoiceHtml = (invoice: any, options: DocumentRenderOpt
         .money-cell { vertical-align: middle; }
         .money { display: flex; justify-content: space-between; gap: 3mm; text-align: right; white-space: nowrap; }
         .closing-section { flex: 1 0 auto; min-height: 0; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
-        .summary-space, .summary { position: relative; }
-        .summary-space::before, .summary::before,
-        .summary-space::after, .summary::after { content: ""; position: absolute; top: 0; bottom: 0; width: 0; border-left: 1.3px solid #111; pointer-events: none; }
-        .summary-space::before, .summary::before { left: 44%; }
-        .summary-space::after, .summary::after { left: 65%; }
         .summary-space { flex: 1 1 0; min-height: 0; }
         .summary { min-height: 20mm; border-bottom: 1.3px solid #111; padding: 1.2mm 1mm; display: flex; flex-direction: column; break-inside: avoid; page-break-inside: avoid; }
         .tax-rows { margin-top: auto; }
         .summary-row { min-height: 6mm; display: grid; grid-template-columns: 44% 21% 35%; align-items: center; }
         .summary-row > span:first-child { padding-right: 1mm; }
         .summary-row .money { padding: 0 1mm; }
-        .total { display: grid; grid-template-columns: 65% 35%; border-bottom: 1.5px solid #111; font-size: 14px; font-weight: 700; min-height: 7mm; align-items: center; }
+        .total { background: linear-gradient(#111, #111) 65% 0 / 1.3px 100% no-repeat; display: grid; grid-template-columns: 65% 35%; border-bottom: 1.5px solid #111; font-size: 14px; font-weight: 700; min-height: 7mm; align-items: center; }
         .total-label { text-align: center; }
-        .total .money { border-left: 1.3px solid #111; height: 100%; align-items: center; padding: 0 1mm; }
+        .total .money { height: 100%; align-items: center; padding: 0 1mm; }
         .grand-total { border-top: 1.5px solid #111; font-size: 15px; }
-        .footer { display: grid; grid-template-columns: 44% 56%; min-height: 25mm; }
-        .bank { border-right: 1.3px solid #111; padding: 1mm; line-height: 1.4; }
+        .footer { background: linear-gradient(#111, #111) 44% 0 / 1.3px 100% no-repeat; display: grid; grid-template-columns: 44% 56%; min-height: 25mm; }
+        .bank { padding: 1mm; line-height: 1.4; }
         .authorization { padding: 1.2mm; text-align: center; }
         .signature { display: block; width: 43mm; height: 13mm; object-fit: contain; margin: 1.5mm auto 0; }
       </style>

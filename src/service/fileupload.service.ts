@@ -185,7 +185,13 @@ export const fileUploadService = {
           uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
         }
         prepareInvoiceShippingFields(uploadData[0]);
-        const uploadPdfToGcs = await uploadInvoicePdf(bucketname, uploadData[0]);
+        const uploadPdfToGcs = await uploadInvoicePdf(
+          bucketname,
+          uploadData[0],
+          templateType === "productinvoice-instore"
+            ? { placeOfSupplyText: "Same as billing" }
+            : undefined,
+        );
         return { success: true, data: uploadPdfToGcs, uploadData };
       } else if (
         templateType === "storequotation-instore" ||
@@ -211,9 +217,11 @@ export const fileUploadService = {
             uploadData[0]?.id ||
             Date.now()
         ).replace(/[^a-zA-Z0-9_-]+/g, "-");
+        // A template revision identifies corrected company details, while a
+        // unique filename prevents a previous PDF being served from cache.
         const uploadPdfToGcs = await uploadFilesToGcs2(
           bucketname,
-          `QUOTATION-${quoteReference}.pdf`,
+          `QUOTATION-${quoteReference}-company-v2-layout-v1-${Date.now()}.pdf`,
           fileBuffer,
         );
         if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
