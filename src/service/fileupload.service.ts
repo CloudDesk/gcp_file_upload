@@ -108,7 +108,12 @@ const uploadInvoicePdf = async (
   invoice: any,
   options?: DocumentRenderOptions
 ) => {
-  const fileBuffer = await renderInStoreInvoicePdf(invoice, options);
+  // All tax invoices share this display label. Keep the underlying address
+  // and tax-state fields intact for calculations and other document flows.
+  const fileBuffer = await renderInStoreInvoicePdf(invoice, {
+    ...options,
+    placeOfSupplyText: "Same as billing",
+  });
   const invoiceReference = String(
     invoice?.invoicenumber || invoice?.id || Date.now()
   ).replace(/[^a-zA-Z0-9_-]+/g, "-");
@@ -185,13 +190,7 @@ export const fileUploadService = {
           uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
         }
         prepareInvoiceShippingFields(uploadData[0]);
-        const uploadPdfToGcs = await uploadInvoicePdf(
-          bucketname,
-          uploadData[0],
-          templateType === "productinvoice-instore"
-            ? { placeOfSupplyText: "Same as billing" }
-            : undefined,
-        );
+        const uploadPdfToGcs = await uploadInvoicePdf(bucketname, uploadData[0]);
         return { success: true, data: uploadPdfToGcs, uploadData };
       } else if (
         templateType === "storequotation-instore" ||
