@@ -93,6 +93,21 @@ const prepareServiceInvoiceCustomerGstVisibility = (invoice) => {
     // billing and shipping never show an empty GST label for non-business users.
     invoice.showcustomergst = hasCustomerGstNumber(invoice?.customergstnumber);
 };
+const uploadInvoicePdf = async (bucketname, invoice, options) => {
+    // All tax invoices share this display label. Keep the underlying address
+    // and tax-state fields intact for calculations and other document flows.
+    const fileBuffer = await renderInStoreInvoicePdf(invoice, {
+        ...options,
+        placeOfSupplyText: "Same as billing",
+    });
+    const invoiceReference = String(invoice?.invoicenumber || invoice?.id || Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
+    const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `${invoiceReference}.pdf`, fileBuffer);
+    if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+        throw new Error(uploadPdfToGcs.error || "Invoice PDF upload failed");
+    }
+    invoice.invoiceurl = uploadPdfToGcs.url;
+    return uploadPdfToGcs;
+};
 export const fileUploadService = {
     uploadFile: async (request, uploadData, reply) => {
         console.log(uploadData, "DATA IS");
@@ -113,7 +128,9 @@ export const fileUploadService = {
                 bucketname = REVO_PR_BUCKET;
             }
             else if (templateType === "costestimation") {
-                template = "costestimation/costestimation.docx";
+                // Estimations use the unified PDF format with Product and Service
+                // blocks. The payload is forwarded to the estimation save API
+                // afterwards, so only estimationurl is added to it.
                 uploadData.forEach((e) => {
                     if (e.productdata) {
                         e.productdata = JSON.parse(e.productdata);
@@ -121,40 +138,32 @@ export const fileUploadService = {
                     if (e.servicedata) {
                         e.servicedata = JSON.parse(e.servicedata);
                     }
-                    e.estimationdate = new Date().toLocaleDateString();
                 });
-                console.log(uploadData, "uploadData aFTER PARSE");
-                // bucketname = "revo-cost-estimation";
                 bucketname = REVO_COST_ESTIMATION_BUCKET;
-            }
-            else if (templateType === "productinvoice") {
-                template = "invoice/revoinvoiceproduct.docx";
-                // Convert invoicedata to object if it is a string
-                if (typeof uploadData[0].invoicedata === 'string') {
-                    uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
+                const fileBuffer = await renderInStoreInvoicePdf(uploadData[0], {
+                    documentType: "estimation",
+                    title: "COST ESTIMATION",
+                    numberLabel: "TICKET NO",
+                    dateLabel: "DATE",
+                });
+                const estimationReference = String(uploadData[0]?.ticketnumber || uploadData[0]?.id || Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
+                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `ESTIMATION-${estimationReference}.pdf`, fileBuffer);
+                if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
+                    throw new Error(uploadPdfToGcs.error || "Cost estimation upload failed");
                 }
-                prepareInvoiceShippingFields(uploadData[0]);
-                const hasManualItems = uploadData[0]?.invoicedata?.items?.some((item) => item.type === "manual" || item.type === "manualstore");
-                if (hasManualItems ||
-                    uploadData[0]?.invoicefor === "rental" ||
-                    uploadData[0]?.invoicedata?.ordername === "rental") {
-                    template = "invoice/revoinvoicerental.docx";
-                }
-                bucketname = REVO_PRODUCT_INVOICE_BUCKET;
+                uploadData[0].estimationurl = uploadPdfToGcs.url;
+                return { success: true, data: uploadPdfToGcs, uploadData };
             }
-            else if (templateType === "productinvoice-instore") {
+            else if (templateType === "productinvoice" ||
+                templateType === "productinvoice-instore") {
+                // Orders (online, in-store, rental), manual and penalty invoices all
+                // use the unified PDF format.
                 bucketname = REVO_PRODUCT_INVOICE_BUCKET;
                 if (typeof uploadData[0].invoicedata === "string") {
                     uploadData[0].invoicedata = JSON.parse(uploadData[0].invoicedata);
                 }
                 prepareInvoiceShippingFields(uploadData[0]);
-                const fileBuffer = await renderInStoreInvoicePdf(uploadData[0]);
-                const invoiceReference = String(uploadData[0]?.invoicenumber || uploadData[0]?.id || Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
-                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `${invoiceReference}.pdf`, fileBuffer);
-                if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
-                    throw new Error(uploadPdfToGcs.error || "In-store invoice upload failed");
-                }
-                uploadData[0].invoiceurl = uploadPdfToGcs.url;
+                const uploadPdfToGcs = await uploadInvoicePdf(bucketname, uploadData[0]);
                 return { success: true, data: uploadPdfToGcs, uploadData };
             }
             else if (templateType === "storequotation-instore" ||
@@ -177,7 +186,9 @@ export const fileUploadService = {
                     uploadData[0]?.invoicenumber ||
                     uploadData[0]?.id ||
                     Date.now()).replace(/[^a-zA-Z0-9_-]+/g, "-");
-                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `QUOTATION-${quoteReference}.pdf`, fileBuffer);
+                // A template revision identifies corrected company details, while a
+                // unique filename prevents a previous PDF being served from cache.
+                const uploadPdfToGcs = await uploadFilesToGcs2(bucketname, `QUOTATION-${quoteReference}-company-v2-layout-v1-${Date.now()}.pdf`, fileBuffer);
                 if (!uploadPdfToGcs.success || !uploadPdfToGcs.url) {
                     throw new Error(uploadPdfToGcs.error || "In-store quotation upload failed");
                 }
@@ -185,12 +196,19 @@ export const fileUploadService = {
                 return { success: true, data: uploadPdfToGcs, uploadData };
             }
             else if (templateType === "serviceinvoice") {
-                template = "invoice/revoinvoiceservice.docx";
+                // Service invoices use the unified PDF format with separate
+                // Product (HSN) and Service (SAC) blocks.
                 prepareInvoiceShippingFields(uploadData[0]);
                 prepareServiceInvoiceRoundOffFields(uploadData[0]);
                 prepareServiceInvoiceCustomerGstVisibility(uploadData[0]);
-                // bucketname = "revo_service_invoice";
+                if (!uploadData[0].showcustomergst) {
+                    uploadData[0].customergstnumber = "";
+                }
                 bucketname = REVO_SERVICE_INVOICE_BUCKET;
+                const uploadPdfToGcs = await uploadInvoicePdf(bucketname, uploadData[0], {
+                    documentType: "service",
+                });
+                return { success: true, data: uploadPdfToGcs, uploadData };
             }
             let result = await GenerateDocx(request, uploadData, template);
             if (!result?.relativeFilePath) {
@@ -207,15 +225,6 @@ export const fileUploadService = {
                     else if (templateType === "pr") {
                         data.prurl = uploadPdfToGcs.url;
                     }
-                    else if (templateType === "costestimation") {
-                        data.estimationurl = uploadPdfToGcs.url;
-                    }
-                    else if (templateType === "productinvoice") {
-                        data.invoiceurl = uploadPdfToGcs.url;
-                    }
-                    else if (templateType === "serviceinvoice") {
-                        data.invoiceurl = uploadPdfToGcs.url;
-                    }
                 });
             }
             else {
@@ -224,15 +233,6 @@ export const fileUploadService = {
                 }
                 else if (templateType === "pr") {
                     uploadData.prurl = uploadPdfToGcs.url;
-                }
-                else if (templateType === "costestimation") {
-                    uploadData.estimationurl = uploadPdfToGcs.url;
-                }
-                else if (templateType === "productinvoice") {
-                    uploadData.invoiceurl = uploadPdfToGcs.url;
-                }
-                else if (templateType === "serviceinvoice") {
-                    uploadData.invoiceurl = uploadPdfToGcs.url;
                 }
             }
             return { success: true, data: uploadPdfToGcs, uploadData };

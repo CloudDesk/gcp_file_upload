@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "npx tsx src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "test:invoice-display": "tsx --test src/tests/invoiceDisplay.test.ts",
     "build": "tsc",
     "revo-fileupload-build": "docker build -f dockerfile -t revo-fileupload-sit .",
     "revo-fileupload-tag": "docker tag revo-fileupload-sit gcr.io/revo-dev-and-test/revo-fileupload-sit",
